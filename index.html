@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadetians⚔️⚔️ — SSB Stage-1 CSS & OPAM 190-Question Simulator</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            obsidian: '#0b0b0d',
+            surface: '#131318',
+            card: '#191921',
+            borderDark: '#272733',
+            cadetOrange: '#ff6b00',
+            cadetOrangeHover: '#ff852e',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0b0b0d;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0b0d;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #272733;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff6b00;
+    }
+    @keyframes pulseUrgent {
+      0%, 100% { border-color: #ef4444; box-shadow: 0 0 12px rgba(239, 68, 68, 0.35); }
+      50% { border-color: #ff6b00; box-shadow: 0 0 4px rgba(255, 107, 0, 0.15); }
+    }
+    .urgent-pulse {
+      animation: pulseUrgent 1s infinite;
+    }
+    .option-card {
+      transition: all 0.14s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .option-card:hover {
+      transform: translateX(3px);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-obsidian text-white selection:bg-cadetOrange selection:text-white">
+
+  <!-- ==================== TOP STICKY HUD (BRANDING + DUAL TIMERS + UPPER SCALE) ==================== -->
+  <header class="sticky top-0 z-50 bg-surface/95 backdrop-blur-md border-b border-borderDark shadow-2xl">
+    <!-- Top Row: Brand & Dual Timers -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-cadetOrange flex items-center justify-center font-black text-obsidian text-lg shadow-lg shadow-cadetOrange/25">
+          ⚔️
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-black tracking-tight text-base sm:text-lg text-white">Cadetians<span class="text-cadetOrange">⚔️⚔️</span></span>
+            <span class="hidden md:inline-block text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-cadetOrange/15 text-cadetOrange border border-cadetOrange/30">
+              STAGE-1 ENGINE v2.6
+            </span>
+          </div>
+          <p class="text-[11px] text-zinc-400 font-medium leading-none">SSB Computerised Screening (CSS + OPAM)</p>
+        </div>
+      </div>
+
+      <!-- Dual Live Timers (Visible at all times) -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Timer 1: Question / Stimulus Timer -->
+        <div id="qTimerBox" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-borderDark">
+          <div class="text-right">
+            <div id="qTimerLabel" class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Q / Cue Timer</div>
+            <div id="qTimerDisplay" class="font-mono font-extrabold text-sm sm:text-base text-cadetOrange">00:30</div>
+          </div>
+          <div class="w-2 h-2 rounded-full bg-cadetOrange animate-ping"></div>
+        </div>
+
+        <!-- Timer 2: Sectional Timer -->
+        <div id="secTimerBox" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-borderDark">
+          <div class="text-right">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Section Left</div>
+            <div id="secTimerDisplay" class="font-mono font-extrabold text-sm sm:text-base text-white">04:00</div>
+          </div>
+        </div>
+
+        <!-- Timer 3: Total 90-Min Exam Timer -->
+        <div id="totalTimerBox" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-cadetOrange/40">
+          <div class="text-right">
+            <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">Total Exam</div>
+            <div id="totalTimerDisplay" class="font-mono font-extrabold text-sm sm:text-base text-white">90:00</div>
+          </div>
+        </div>
+
+        <!-- Finish Early Button -->
+        <button id="endExamBtn" onclick="openConfirmModal()" class="hidden px-3 py-2 rounded-xl bg-zinc-800 hover:bg-red-600/90 text-xs font-bold text-zinc-200 hover:text-white border border-borderDark transition">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Row: Upper Scale Status Bar (Section Info, Attempted, Left, Progress) -->
+    <div id="upperScaleBar" class="hidden bg-obsidian/90 border-t border-borderDark px-3 sm:px-6 py-2">
+      <div class="max-w-7xl mx-auto flex flex-col gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <!-- Active Section Pill -->
+          <div class="flex items-center gap-2">
+            <span id="hudPartBadge" class="px-2 py-0.5 rounded-md font-mono font-bold text-[11px] bg-cadetOrange text-obsidian">
+              PART A: CSS
+            </span>
+            <span id="hudSectionTitle" class="font-bold text-white text-xs sm:text-sm">
+              Section 1: Map Memory
+            </span>
+            <span id="hudNavRule" class="hidden lg:inline-block text-[11px] text-zinc-400 font-mono">
+              • Strict Forward-Only
+            </span>
+          </div>
+
+          <!-- Upper Scale Counts: Current Q | Attempted | Remaining/Left -->
+          <div class="flex items-center gap-2 sm:gap-4 font-mono">
+            <div class="px-2.5 py-1 rounded-lg bg-card border border-borderDark">
+              <span class="text-zinc-400">Q:</span>
+              <span id="hudCurrentQ" class="font-bold text-white">1</span><span class="text-zinc-500">/190</span>
+            </div>
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-950/50 border border-emerald-500/30 text-emerald-400">
+              <span>Attempted:</span>
+              <span id="hudAttempted" class="font-extrabold">0</span>
+            </div>
+            <div class="px-2.5 py-1 rounded-lg bg-cadetOrange/15 border border-cadetOrange/40 text-cadetOrange">
+              <span>Left:</span>
+              <span id="hudLeft" class="font-extrabold">190</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual 10-Section Segment Scale -->
+        <div id="sectionScaleTrack" class="grid grid-cols-10 gap-1 h-2 w-full">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6 flex flex-col justify-center">
+
+    <!-- 1. START / BRIEFING SCREEN -->
+    <section id="startScreen" class="bg-surface border border-borderDark rounded-2xl p-5 sm:p-8 shadow-2xl">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-borderDark">
+        <div>
+          <span class="inline-block px-3 py-1 rounded-full bg-cadetOrange/15 text-cadetOrange font-mono text-xs font-bold mb-2">
+            OFFICIAL PATTERN SIMULATION • 190 ITEMS • 90 MINUTES
+          </span>
+          <h1 class="text-2xl sm:text-4xl font-black tracking-tight text-white">
+            Cadetians<span class="text-cadetOrange">⚔️⚔️</span> Stage-1 CSS & OPAM
+          </h1>
+          <p class="text-zinc-400 text-sm sm:text-base mt-1">
+            Computerised Stage-1 Selection System (70 Qs) + Objective Personality Assessment Measure (120 Qs)
+          </p>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <div class="px-4 py-3 rounded-xl bg-card border border-borderDark text-center">
+            <div class="text-xl font-black text-cadetOrange">10</div>
+            <div class="text-[10px] uppercase tracking-wider text-zinc-400">Sections</div>
+          </div>
+          <div class="px-4 py-3 rounded-xl bg-card border border-borderDark text-center">
+            <div class="text-xl font-black text-white">190</div>
+            <div class="text-[10px] uppercase tracking-wider text-zinc-400">Questions</div>
+          </div>
+          <div class="px-4 py-3 rounded-xl bg-card border border-borderDark text-center">
+            <div class="text-xl font-black text-white">90m</div>
+            <div class="text-[10px] uppercase tracking-wider text-zinc-400">Duration</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10-Section Blueprint Table -->
+      <div class="mt-6">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-cadetOrange font-bold mb-3">
+          Test Architecture & Sectional Timers
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-cadetOrange">Sec 1:</strong> Map Memory (15s Map Flash + Q1–Q8)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">04:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-cadetOrange">Sec 2:</strong> Auditory / Audiometry Cues (Q9–Q16)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">04:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-cadetOrange">Sec 3:</strong> Working Memory 5s Flash (Q17–Q24)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">04:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-cadetOrange">Sec 4:</strong> Selective & Sustained Attention (Q25–Q34)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">07:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-cadetOrange">Sec 5:</strong> Space, Visualization & Form (Q35–Q48)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">10:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-cadetOrange">Sec 6:</strong> Perceptual Speed Scan (Q49–Q58)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">06:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-cadetOrange">Sec 7:</strong> Linguistic & 90s Timed RC (Q59–Q70)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">10:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-white">Sec 8:</strong> OPAM Self-Profiling Likert (Q71–Q130)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">20:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-white">Sec 9:</strong> OPAM Forced-Choice Pairs (Q131–Q165)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">12:00</span>
+          </div>
+          <div class="p-3 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+            <span><strong class="text-white">Sec 10:</strong> OPAM Situation Reactions (Q166–Q190)</span>
+            <span class="font-mono text-zinc-300 bg-obsidian px-2 py-0.5 rounded">13:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workstation Key Controls & Audio Test -->
+      <div class="mt-6 p-4 rounded-xl bg-obsidian border border-borderDark flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="text-xs text-zinc-300 space-y-1">
+          <div class="font-bold text-white flex items-center gap-2">
+            <span>⌨️ Stickered Workstation Keys Active:</span>
+          </div>
+          <p class="text-zinc-400">
+            Press <kbd class="px-1.5 py-0.5 bg-card border border-borderDark rounded text-cadetOrange font-mono">A</kbd>
+            <kbd class="px-1.5 py-0.5 bg-card border border-borderDark rounded text-cadetOrange font-mono">B</kbd>
+            <kbd class="px-1.5 py-0.5 bg-card border border-borderDark rounded text-cadetOrange font-mono">C</kbd>
+            <kbd class="px-1.5 py-0.5 bg-card border border-borderDark rounded text-cadetOrange font-mono">D</kbd>
+            <kbd class="px-1.5 py-0.5 bg-card border border-borderDark rounded text-cadetOrange font-mono">E</kbd>
+            to select options, and <kbd class="px-1.5 py-0.5 bg-card border border-borderDark rounded text-white font-mono">Enter</kbd> or <kbd class="px-1.5 py-0.5 bg-card border border-borderDark rounded text-white font-mono">→</kbd> to advance.
+          </p>
+        </div>
+        <button onclick="testAudioCalibrate()" class="shrink-0 px-4 py-2 rounded-xl bg-card hover:bg-zinc-800 border border-cadetOrange/50 text-cadetOrange text-xs font-bold flex items-center gap-2 transition">
+          <span>🎧 Test Headset Audio</span>
+        </button>
+      </div>
+
+      <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-xs text-zinc-400">
+          ⚠️ OPAM tracks response latency in milliseconds. Answer instinctively (1.5s–3.5s) without over-calculating.
+        </p>
+        <button onclick="startFullAssessment()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-cadetOrange hover:bg-cadetOrangeHover text-obsidian font-black text-sm sm:text-base tracking-wide shadow-lg shadow-cadetOrange/30 transition transform active:scale-95">
+          LAUNCH STAGE-1 TEST ⚔️
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. SECTION BRIEFING INTERSTITIAL -->
+    <section id="sectionBriefScreen" class="hidden bg-surface border border-borderDark rounded-2xl p-6 sm:p-10 text-center shadow-2xl max-w-2xl mx-auto w-full">
+      <span id="briefPartTag" class="inline-block px-3 py-1 rounded-full bg-cadetOrange/15 text-cadetOrange font-mono text-xs font-bold mb-3">
+        PART A: COGNITIVE BATTERY (CSS)
+      </span>
+      <h2 id="briefTitle" class="text-2xl sm:text-3xl font-black text-white mb-2">
+        Section 1: Map Memory
+      </h2>
+      <p id="briefDesc" class="text-zinc-300 text-sm sm:text-base leading-relaxed mb-6">
+        A tactical 3×3 sector map will appear on your screen for exactly 15 seconds. Memorize installations, routes, river bridges, and minefields before it vanishes.
+      </p>
+      <div class="grid grid-cols-3 gap-3 mb-8 text-left">
+        <div class="p-3 rounded-xl bg-card border border-borderDark">
+          <div class="text-[11px] text-zinc-400">Questions</div>
+          <div id="briefQCount" class="font-mono font-bold text-white text-base">Q1 – Q8 (8)</div>
+        </div>
+        <div class="p-3 rounded-xl bg-card border border-borderDark">
+          <div class="text-[11px] text-zinc-400">Section Timer</div>
+          <div id="briefTime" class="font-mono font-bold text-cadetOrange text-base">04:00</div>
+        </div>
+        <div class="p-3 rounded-xl bg-card border border-borderDark">
+          <div class="text-[11px] text-zinc-400">Navigation</div>
+          <div id="briefNav" class="font-mono font-bold text-white text-xs sm:text-sm mt-0.5">Forward Only</div>
+        </div>
+      </div>
+      <button onclick="beginActiveSection()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-cadetOrange hover:bg-cadetOrangeHover text-obsidian font-black text-base shadow-lg shadow-cadetOrange/25 transition">
+        START SECTION NOW →
+      </button>
+    </section>
+
+    <!-- 3. STIMULUS OVERLAY PHASE (15s Map View / 5s Flash / 90s RC Passage) -->
+    <section id="stimulusScreen" class="hidden bg-surface border-2 border-cadetOrange rounded-2xl p-5 sm:p-8 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-borderDark">
+        <div>
+          <span id="stimBadge" class="px-2.5 py-1 rounded bg-cadetOrange text-obsidian font-mono font-extrabold text-xs uppercase">
+            MEMORIZE STIMULUS
+          </span>
+          <h3 id="stimTitle" class="text-lg sm:text-xl font-bold text-white mt-1.5">
+            Tactical Sector Map — Study Carefully
+          </h3>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="px-4 py-2 rounded-xl bg-obsidian border border-cadetOrange text-center">
+            <div class="text-[10px] uppercase text-zinc-400 font-mono">Auto-Hides In</div>
+            <div id="stimCountdown" class="font-mono font-black text-2xl text-cadetOrange">15s</div>
+          </div>
+          <button onclick="skipStimulusEarly()" class="px-3 py-2.5 rounded-xl bg-card hover:bg-zinc-800 border border-borderDark text-xs font-bold text-zinc-300">
+            Ready Now →
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic Visual Stimulus Container -->
+      <div id="stimContent" class="w-full"></div>
+    </section>
+
+    <!-- 4. ACTIVE QUESTION WORKSPACE -->
+    <section id="questionScreen" class="hidden bg-surface border border-borderDark rounded-2xl p-5 sm:p-8 shadow-2xl">
+      <!-- Top Metadata Row -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-5 border-b border-borderDark">
+        <div class="flex items-center gap-2">
+          <span id="qNumberTag" class="px-3 py-1 rounded-lg bg-cadetOrange/15 border border-cadetOrange/40 text-cadetOrange font-mono font-extrabold text-sm">
+            Q1
+          </span>
+          <span id="qSubTag" class="text-xs font-mono text-zinc-400 uppercase tracking-wider">
+            MAP MEMORY RECALL
+          </span>
+        </div>
+        <div id="latencyIndicator" class="hidden text-xs font-mono text-zinc-400">
+          Psychometric Pacing: <span class="text-cadetOrange font-bold">Active</span>
+        </div>
+      </div>
+
+      <!-- Optional Audio Player Bar (for Section 2) -->
+      <div id="audioControlBar" class="hidden mb-5 p-4 rounded-xl bg-obsidian border border-cadetOrange/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-cadetOrange/20 border border-cadetOrange flex items-center justify-center text-cadetOrange font-bold">
+            🎧
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">Workstation Audio Transmission</div>
+            <div id="audioStatusText" class="text-xs text-zinc-400">Click Play to trigger headphone cue (1x standard playback)</div>
+          </div>
+        </div>
+        <button id="playAudioBtn" onclick="playCurrentAudioCue()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-cadetOrange hover:bg-cadetOrangeHover text-obsidian font-black text-xs uppercase tracking-wider shadow-md transition">
+          ▶ Play Audio Cue
+        </button>
+      </div>
+
+      <!-- Question Stem -->
+      <div id="questionPrompt" class="text-base sm:text-xl font-bold text-white leading-relaxed mb-6">
+        Question text goes here...
+      </div>
+
+      <!-- Options List -->
+      <div id="optionsContainer" class="space-y-3">
+        <!-- Populated dynamically -->
+      </div>
+
+      <!-- Bottom Navigation Footer -->
+      <div class="mt-8 pt-4 border-t border-borderDark flex items-center justify-between gap-3">
+        <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-obsidian border border-borderDark text-[11px] font-mono text-zinc-400">
+          <span class="w-2 h-2 rounded-full bg-red-500"></span>
+          <span>STRICT ONE-WAY • NO RETURN</span>
+        </div>
+
+        <div class="text-[11px] font-mono text-zinc-500 hidden sm:block">
+          Keys: [A–E] Select • [Enter] Save & Next
+        </div>
+
+        <button id="nextQBtn" onclick="navigateNext()" class="px-6 py-2.5 rounded-xl bg-cadetOrange hover:bg-cadetOrangeHover text-obsidian font-black text-xs sm:text-sm shadow-lg shadow-cadetOrange/20 transition">
+          Save & Next →
+        </button>
+      </div>
+    </section>
+
+    <!-- 5. FINAL DIAGNOSTIC SCORECARD -->
+    <section id="resultScreen" class="hidden space-y-6">
+      <!-- Top Summary Hero -->
+      <div class="bg-surface border border-borderDark rounded-2xl p-6 sm:p-8 shadow-2xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-borderDark">
+          <div>
+            <span class="px-3 py-1 rounded-full bg-cadetOrange/15 text-cadetOrange font-mono text-xs font-bold">
+              STAGE-1 EVALUATION COMPLETE
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-black text-white mt-2">
+              Cadetians<span class="text-cadetOrange">⚔️⚔️</span> Diagnostic Dossier
+            </h2>
+            <p class="text-zinc-400 text-xs sm:text-sm mt-1">
+              Combined Cognitive Accuracy (CSS) & Psychometric Validity Audit (OPAM)
+            </p>
+          </div>
+          <button onclick="location.reload()" class="px-5 py-2.5 rounded-xl bg-card hover:bg-zinc-800 border border-borderDark text-xs font-bold text-white">
+            ↻ Retake Full Simulator
+          </button>
+        </div>
+
+        <!-- 4 Key KPIs -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6">
+          <div class="p-4 rounded-xl bg-card border border-borderDark">
+            <div class="text-xs text-zinc-400">Part A: CSS Score</div>
+            <div id="resCssScore" class="text-2xl sm:text-3xl font-black text-cadetOrange mt-1">0 / 70</div>
+            <div id="resCssPct" class="text-xs font-mono text-zinc-400 mt-1">0% Accuracy</div>
+          </div>
+          <div class="p-4 rounded-xl bg-card border border-borderDark">
+            <div class="text-xs text-zinc-400">Part B: OPAM Answered</div>
+            <div id="resOpamCount" class="text-2xl sm:text-3xl font-black text-white mt-1">0 / 120</div>
+            <div id="resAvgLatency" class="text-xs font-mono text-zinc-400 mt-1">Avg Latency: 0.0s</div>
+          </div>
+          <div class="p-4 rounded-xl bg-card border border-borderDark">
+            <div class="text-xs text-zinc-400">OPAM Consistency Index</div>
+            <div id="resConsistency" class="text-2xl sm:text-3xl font-black text-emerald-400 mt-1">0 / 6</div>
+            <div class="text-xs font-mono text-zinc-400 mt-1">Paired Trait Alignment</div>
+          </div>
+          <div class="p-4 rounded-xl bg-card border border-borderDark">
+            <div class="text-xs text-zinc-400">Screening Verdict</div>
+            <div id="resVerdict" class="text-lg sm:text-xl font-black text-white mt-1.5">EVALUATING</div>
+            <div id="resVerdictSub" class="text-[11px] text-zinc-400 mt-1">CSS + OPAM Composite</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sectional Breakdown Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Part A: 7 CSS Cognitive Sections -->
+        <div class="bg-surface border border-borderDark rounded-2xl p-6 shadow-xl">
+          <h3 class="text-base font-black text-white mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cadetOrange"></span>
+            Part A: CSS Cognitive Sectional Breakdown
+          </h3>
+          <div id="cssBreakdownList" class="space-y-3 text-xs">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Part B: OPAM Psychometric Audit -->
+        <div class="bg-surface border border-borderDark rounded-2xl p-6 shadow-xl">
+          <h3 class="text-base font-black text-white mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-white"></span>
+            Part B: OPAM Psychometric & Validity Audit
+          </h3>
+          <div id="opamAuditList" class="space-y-3 text-xs">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Part A Answer Key Review -->
+      <div class="bg-surface border border-borderDark rounded-2xl p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-black text-white">Part A (Q1–Q70) Answer Key & Response Audit</h3>
+          <button onclick="toggleReviewDrawer()" id="toggleReviewBtn" class="px-3 py-1.5 rounded-lg bg-cadetOrange/15 text-cadetOrange font-mono text-xs font-bold">
+            Show All 70 Answers
+          </button>
+        </div>
+        <div id="reviewDrawer" class="hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-2">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== CUSTOM MODAL (NO NATIVE ALERT/CONFIRM) ==================== -->
+  <div id="customModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface border border-borderDark rounded-2xl p-6 max-w-md w-full shadow-2xl">
+      <h3 id="modalTitle" class="text-lg font-black text-white">Submit Final Assessment?</h3>
+      <p id="modalBody" class="text-sm text-zinc-400 mt-2">
+        Are you sure you want to end the test early and generate your CSS & OPAM scorecard?
+      </p>
+      <div class="mt-6 flex justify-end gap-3">
+        <button onclick="closeCustomModal()" class="px-4 py-2 rounded-xl bg-card hover:bg-zinc-800 border border-borderDark text-xs font-bold text-zinc-300">
+          Cancel
+        </button>
+        <button id="modalConfirmBtn" onclick="confirmEndExam()" class="px-5 py-2 rounded-xl bg-cadetOrange hover:bg-cadetOrangeHover text-obsidian font-black text-xs">
+          Confirm & Score
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== APPLICATION LOGIC & ALL 190 QUESTIONS ==================== -->
+  <script>
+    // -------------------------------------------------------------------------
+    // 1. SECTION DEFINITIONS (10 SECTIONS, 190 QUESTIONS, 90 MINUTES TOTAL)
+    // -------------------------------------------------------------------------
+    const SECTIONS = [
+      {
+        id: 1,
+        part: "PART A: CSS",
+        title: "Section 1: Map Memory",
+        short: "Map Mem",
+        startQ: 1,
+        endQ: 8,
+        durationSec: 240, // 4 mins
+        allowBack: false,
+        navRule: "15s Map View + Strict One-Way",
+        desc: "A tactical 3×3 sector map will be displayed for 15 seconds. Memorize installations, routes, river bridges, and minefields before it hides.",
+        hasInitialStimulus: true,
+        stimulusDuration: 15,
+        stimulusType: "map"
+      },
+      {
+        id: 2,
+        part: "PART A: CSS",
+        title: "Section 2: Auditory Discrimination",
+        short: "Auditory",
+        startQ: 9,
+        endQ: 16,
+        durationSec: 240, // 4 mins
+        allowBack: false,
+        navRule: "Headphone Audio Cues • One-Way",
+        desc: "Listen carefully to synthesized pitch sequences, reverse digit strings, NATO callsigns over static, Morse rhythms, and minimal word pairs. Play each audio cue once and respond immediately.",
+        hasInitialStimulus: false
+      },
+      {
+        id: 3,
+        part: "PART A: CSS",
+        title: "Section 3: Working Memory",
+        short: "Work Mem",
+        startQ: 17,
+        endQ: 24,
+        durationSec: 240, // 4 mins
+        allowBack: false,
+        navRule: "5s Flash Stimulus • One-Way",
+        desc: "Each question begins with a 5-second visual flash of numbers, grids, or symbols. Once the 5-second timer expires, compute and select the answer from memory.",
+        hasInitialStimulus: false
+      },
+      {
+        id: 4,
+        part: "PART A: CSS",
+        title: "Section 4: Selective & Sustained Attention",
+        short: "Attention",
+        startQ: 25,
+        endQ: 34,
+        durationSec: 420, // 7 mins
+        allowBack: false,
+        navRule: "Forward-Only Endurance",
+        desc: "Filter dense alphanumeric and symbol matrices rapidly without losing accuracy across sustained items.",
+        hasInitialStimulus: false
+      },
+      {
+        id: 5,
+        part: "PART A: CSS",
+        title: "Section 5: Space, Visualization & Form",
+        short: "Spatial",
+        startQ: 35,
+        endQ: 48,
+        durationSec: 600, // 10 mins
+        allowBack: false,
+        navRule: "Strict One-Way • Per-Q Timer",
+        desc: "3D cube rotations, painted faces, mirror/water reflections, paper folding, and directional geometry. Strict forward-only progression applies.",
+        hasInitialStimulus: false
+      },
+      {
+        id: 6,
+        part: "PART A: CSS",
+        title: "Section 6: Perceptual Speed",
+        short: "Speed",
+        startQ: 49,
+        endQ: 58,
+        durationSec: 360, // 6 mins
+        allowBack: false,
+        navRule: "High-Speed Scan • One-Way",
+        desc: "Rapidly compare target codes, coordinates, URLs, and symbol keys to spot exact matches or single-character anomalies.",
+        hasInitialStimulus: false
+      },
+      {
+        id: 7,
+        part: "PART A: CSS",
+        title: "Section 7: Linguistic Ability",
+        short: "Verbal/RC",
+        startQ: 59,
+        endQ: 70,
+        durationSec: 600, // 10 mins
+        allowBack: false,
+        navRule: "90s Timed Passage • One-Way",
+        desc: "Read the tactical surveillance passage within 90 seconds. Once hidden, answer Q59–Q62 from recall, followed by verbal analogies, synonyms, antonyms, and anagrams (Q63–Q70).",
+        hasInitialStimulus: true,
+        stimulusDuration: 90,
+        stimulusType: "passage"
+      },
+      {
+        id: 8,
+        part: "PART B: OPAM",
+        title: "Section 8: Self-Profiling Inventory",
+        short: "OPAM-1",
+        startQ: 71,
+        endQ: 130,
+        durationSec: 1200, // 20 mins
+        allowBack: false,
+        navRule: "Likert Scale • One-Way",
+        desc: "Rate each behavioral statement from Strongly Disagree (A) to Strongly Agree (E). Respond naturally within 1.5–3.5 seconds; consistency pairs and validity checks are active.",
+        hasInitialStimulus: false
+      },
+      {
+        id: 9,
+        part: "PART B: OPAM",
+        title: "Section 9: Forced-Choice Ipsative Pairs",
+        short: "OPAM-2",
+        startQ: 131,
+        endQ: 165,
+        durationSec: 720, // 12 mins
+        allowBack: false,
+        navRule: "Binary Choice • One-Way",
+        desc: "Both statements reflect desirable traits. Select (A) or (B) based on which describes your natural working style more accurately.",
+        hasInitialStimulus: false
+      },
+      {
+        id: 10,
+        part: "PART B: OPAM",
+        title: "Section 10: Objective Situation Reactions",
+        short: "OPAM-3",
+        startQ: 166,
+        endQ: 190,
+        durationSec: 780, // 13 mins
+        allowBack: false,
+        navRule: "Practical SRT • One-Way",
+        desc: "Choose the most practical, responsible, and effective course of action for each real-world leadership or team dilemma.",
+        hasInitialStimulus: false
+      }
+    ];
+
+    // -------------------------------------------------------------------------
+    // 2. COMPLETE 190-QUESTION DATABASE
+    // -------------------------------------------------------------------------
+    const QUESTIONS = [
+      // --- SECTION 1: MAP MEMORY (Q1 - Q8) ---
+      { q: 1, sec: 1, tag: "MAP MEMORY", prompt: "Which installation is located directly to the West of the Command HQ?", options: ["Helipad (H)", "Field Hospital (FH)", "Fuel Dump (FD)", "Radar Station (RS)"], ans: 1 },
+      { q: 2, sec: 1, tag: "MAP MEMORY", prompt: "Moving directly from the Fuel Dump (FD) to the Helipad (H) along the dirt track passes through which point?", options: ["Command HQ", "Main Bridge", "Field Hospital", "Watchtower"], ans: 2 },
+      { q: 3, sec: 1, tag: "MAP MEMORY", prompt: "Which installation sits in the South-East quadrant of the sector?", options: ["Signal Post (SP)", "Ammo Depot (AD)", "Radar Station (RS)", "Main Bridge (MB)"], ans: 0 },
+      { q: 4, sec: 1, tag: "MAP MEMORY", prompt: "A convoy travels from Main Bridge (MB) to Watchtower (WT) via the paved highway. Which installation does it pass directly through?", options: ["Radar Station", "Field Hospital", "Command HQ", "Signal Post"], ans: 2 },
+      { q: 5, sec: 1, tag: "MAP MEMORY", prompt: "Where is the Minefield (XXX) located?", options: ["Between FD and MB", "Between HQ and AD", "Between WT and H", "Between RS and SP"], ans: 1 },
+      { q: 6, sec: 1, tag: "MAP MEMORY", prompt: "Which diagonal axis does the river flow along across the sector?", options: ["North-West to South-East", "North to South", "North-East to South-West", "East to West"], ans: 2 },
+      { q: 7, sec: 1, tag: "MAP MEMORY", prompt: "Looking North from the Signal Post (SP), what is the furthest installation in that same eastern column?", options: ["Watchtower (WT)", "Helipad (H)", "Ammo Depot (AD)", "Radar Station (RS)"], ans: 2 },
+      { q: 8, sec: 1, tag: "MAP MEMORY", prompt: "How many installations are connected by the western dirt track?", options: ["2", "3", "4", "5"], ans: 1 },
+
+      // --- SECTION 2: AUDITORY DISCRIMINATION (Q9 - Q16) ---
+      { q: 9, sec: 2, tag: "AUDIOMETRY • TONE PITCH", audioId: 9, prompt: "Listen to the 5-tone sequence (LOW 400Hz / MID 800Hz / HIGH 1200Hz). How many HIGH pitch tones occurred in the sequence?", options: ["1", "2", "3", "4"], ans: 1 },
+      { q: 10, sec: 2, tag: "AUDIOMETRY • REVERSE DIGIT SPAN", audioId: 10, prompt: "Listen to the 6-digit transmission spoken at 1 digit/sec. What is the EXACT REVERSE of the spoken sequence?", options: ["1 – 8 – 4 – 9 – 2 – 7", "1 – 8 – 9 – 4 – 2 – 7", "1 – 4 – 8 – 9 – 2 – 7", "8 – 1 – 4 – 9 – 2 – 7"], ans: 0 },
+      { q: 11, sec: 2, tag: "AUDIOMETRY • RADIO CALLSIGN", audioId: 11, prompt: "Listen to the radio callsign over background static. Which NATO phonetic word was spoken immediately AFTER the second digit?", options: ["Alpha", "Sierra", "Delta", "Niner"], ans: 2 },
+      { q: 12, sec: 2, tag: "AUDIOMETRY • FREQUENCY DELTA", audioId: 12, prompt: "Compare Tone A and Tone B separated by a 0.5s pause. How did Tone B compare to Tone A?", options: ["Identical pitch", "Slightly higher pitch", "Slightly lower pitch", "Double the duration"], ans: 1 },
+      { q: 13, sec: 2, tag: "AUDIOMETRY • DICHOTIC FILTER", audioId: 13, prompt: "In the stereo channel test (Left Ear: '3 - 8 - 5' vs Right Ear: '9 - 1 - 6'), what is the sum of the digits played strictly in the LEFT ear?", options: ["16", "15", "17", "14"], ans: 0 },
+      { q: 14, sec: 2, tag: "AUDIOMETRY • MORSE RHYTHM", audioId: 14, prompt: "Key: A = dit-dah | B = dah-dit-dit-dit | C = dah-dit-dah-dit. Listen to the two transmitted Morse letters. Which pair was sent?", options: ["B – A", "C – A", "A – C", "C – B"], ans: 1 },
+      { q: 15, sec: 2, tag: "AUDIOMETRY • MINIMAL PAIRS", audioId: 15, prompt: "Listen to the 4 phonetic minimal-pair words through white noise. Which word was the THIRD spoken word?", options: ["SHIP", "SHEEP", "SLIP", "SLEEP"], ans: 2 },
+      { q: 16, sec: 2, tag: "AUDIOMETRY • DUAL-TASK COUNT", audioId: 16, prompt: "Listen to the color stream and count how many times the target word 'RED' is spoken.", options: ["3", "4", "5", "2"], ans: 1 },
+
+      // --- SECTION 3: WORKING MEMORY (Q17 - Q24) ---
+      { q: 17, sec: 3, tag: "WORKING MEMORY • 5s FLASH", flashHtml: "<div class='font-mono text-3xl sm:text-5xl font-black tracking-[0.4em] text-cadetOrange'>4 &nbsp; 9 &nbsp; 2 &nbsp; 7 &nbsp; 5 &nbsp; 8</div>", prompt: "Add the 2nd and 5th numbers from the flashed sequence, then subtract the 1st number.", options: ["10", "11", "9", "12"], ans: 0 },
+      { q: 18, sec: 3, tag: "WORKING MEMORY • 5s FLASH", flashHtml: "<div class='text-4xl sm:text-6xl tracking-[0.35em] text-white'>▲ &nbsp; ■ &nbsp; ● &nbsp; ◆ &nbsp; ▲ &nbsp; ●</div>", prompt: "Which geometric shape occupied the 4th position from the left?", options: ["▲", "■", "●", "◆"], ans: 3 },
+      { q: 19, sec: 3, tag: "WORKING MEMORY • 5s FLASH", flashHtml: "<div class='font-mono text-2xl sm:text-4xl font-bold space-y-2 text-white'><div>Row 1: <span class='text-cadetOrange'>3 &nbsp; 6 &nbsp; 9</span></div><div>Row 2: <span class='text-cadetOrange'>2 &nbsp; 5 &nbsp; 8</span></div><div>Row 3: <span class='text-cadetOrange'>1 &nbsp; 4 &nbsp; 7</span></div></div>", prompt: "What is the sum of the main diagonal running from top-left to bottom-right?", options: ["15", "16", "14", "18"], ans: 0 },
+      { q: 20, sec: 3, tag: "WORKING MEMORY • 5s FLASH", flashHtml: "<div class='font-mono text-2xl sm:text-4xl font-black tracking-wider text-cadetOrange'>K7 &nbsp;—&nbsp; M3 &nbsp;—&nbsp; P9 &nbsp;—&nbsp; R2 &nbsp;—&nbsp; T6</div>", prompt: "Which letter was paired with the largest single-digit number?", options: ["K", "M", "P", "T"], ans: 2 },
+      { q: 21, sec: 3, tag: "WORKING MEMORY • 5s FLASH", flashHtml: "<div class='font-mono text-xl sm:text-3xl font-extrabold text-white'>START = <span class='text-cadetOrange'>14</span> → (+9) → (÷2) → (×3) → (-5)</div>", prompt: "Execute the flashed operation chain sequentially. What is the final result?", options: ["28.5", "29.5", "30.5", "27.5"], ans: 1 },
+      { q: 22, sec: 3, tag: "WORKING MEMORY • 5s FLASH", flashHtml: "<div class='font-mono text-xl sm:text-3xl font-bold text-cadetOrange'>BLUE(4) &nbsp;|&nbsp; GREEN(7) &nbsp;|&nbsp; RED(2) &nbsp;|&nbsp; WHITE(9)</div>", prompt: "Arrange the colors from HIGHEST to LOWEST attached number. What is the 2nd color?", options: ["BLUE", "GREEN", "RED", "WHITE"], ans: 1 },
+      { q: 23, sec: 3, tag: "WORKING MEMORY • 5s FLASH", flashHtml: "<div class='font-mono text-3xl sm:text-5xl font-black tracking-[0.35em] text-white'>8 &nbsp; 3 &nbsp; 6 &nbsp; 1 &nbsp; 9 &nbsp; 4 &nbsp; 2</div>", prompt: "How many odd numbers appeared BEFORE the digit 9?", options: ["1", "2", "3", "4"], ans: 1 },
+      { q: 24, sec: 3, tag: "WORKING MEMORY • 5s FLASH", flashHtml: "<div class='font-mono text-3xl sm:text-5xl font-black text-cadetOrange'>X = 5 &nbsp;&nbsp;|&nbsp;&nbsp; Y = 8 &nbsp;&nbsp;|&nbsp;&nbsp; Z = 3</div>", prompt: "Using the flashed variable values, compute: (Y × Z) - (X × 2).", options: ["14", "16", "12", "18"], ans: 0 },
+
+      // --- SECTION 4: SELECTIVE & SUSTAINED ATTENTION (Q25 - Q34) ---
+      { q: 25, sec: 4, tag: "SELECTIVE ATTENTION", prompt: "Count the exact number of '@' symbols in the string:\n#&@%$#@*&@%$#@!@&*%#@$!@", options: ["6", "7", "8", "9"], ans: 1 },
+      { q: 26, sec: 4, tag: "SELECTIVE ATTENTION", prompt: "How many times does the exact sequence '73' appear (do not count '37')?\n73827391374736273193773", options: ["4", "5", "6", "3"], ans: 1 },
+      { q: 27, sec: 4, tag: "SELECTIVE ATTENTION", prompt: "Count the number of vowels (A, E, I, O, U) in the block:\nK M E P Q A R T U Z L O N B I V X E W Y", options: ["5", "6", "7", "4"], ans: 1 },
+      { q: 28, sec: 4, tag: "SELECTIVE ATTENTION", prompt: "Find the exact count of lowercase 'p' in:\nq p b d p q p b d p q b p d q p b p", options: ["6", "7", "8", "5"], ans: 2 },
+      { q: 29, sec: 4, tag: "SUSTAINED ATTENTION", prompt: "How many numbers in the list are divisible by 4?\n18, 24, 34, 48, 52, 62, 76, 82, 96", options: ["4", "5", "6", "3"], ans: 1 },
+      { q: 30, sec: 4, tag: "SUSTAINED ATTENTION", prompt: "Count the occurrences of the adjacent pair 'AB' in:\nA B B A A B A B B A B A A B B A B", options: ["5", "6", "7", "4"], ans: 1 },
+      { q: 31, sec: 4, tag: "SUSTAINED ATTENTION", prompt: "How many times does '0' appear immediately followed by an even digit (2, 4, 6, 8)?\n1029048037065018082", options: ["3", "4", "5", "6"], ans: 1 },
+      { q: 32, sec: 4, tag: "SUSTAINED ATTENTION", prompt: "Count the characters that are NEITHER letters NOR digits:\nA7$K9#M2@P4&L8*Q1%Z5!", options: ["5", "6", "7", "8"], ans: 2 },
+      { q: 33, sec: 4, tag: "SUSTAINED ATTENTION", prompt: "How many 'E's are immediately preceded by 'T' and immediately followed by 'R' (TER)?\nT E R A T E D T E R M P T E R S T E N T E R", options: ["3", "4", "5", "2"], ans: 1 },
+      { q: 34, sec: 4, tag: "SUSTAINED ATTENTION", prompt: "In the 4-row matrix, how many times does '9' appear in Rows 2 and 4 COMBINED?\nRow 1: 9 4 9 2 1\nRow 2: 3 9 5 9 8\nRow 3: 9 9 1 4 9\nRow 4: 6 2 9 7 9", options: ["3", "4", "5", "6"], ans: 1 },
+
+      // --- SECTION 5: SPACE, VISUALIZATION & FORM PERCEPTION (Q35 - Q48) ---
+      { q: 35, sec: 5, tag: "SPACE PERCEPTION", prompt: "A standard 6-sided die has 1 on top and 2 facing you (South). If 1, 2, 3 meet clockwise around the top-front-right corner, which number is on the LEFT face?", options: ["3", "4", "5", "6"], ans: 1 },
+      { q: 36, sec: 5, tag: "VISUALIZATION", prompt: "A 4 × 4 × 4 solid cube is painted red on all outer faces and sliced into 64 unit cubes. How many unit cubes have EXACTLY 2 faces painted?", options: ["16", "24", "32", "8"], ans: 1 },
+      { q: 37, sec: 5, tag: "SPATIAL ORIENTATION", prompt: "You face North-East, turn 135° clockwise, and then turn 90° counter-clockwise. Which direction are you facing now?", options: ["East", "South-East", "South", "North"], ans: 0 },
+      { q: 38, sec: 5, tag: "MIRROR IMAGE", prompt: "What is the exact vertical mirror image (mirror placed on the right) of the alphanumeric string '2B7R9'?", options: ["9R7B2 (with laterally inverted glyphs)", "2B7R9 (inverted vertically)", "97BR2 (laterally inverted)", "27B9R (laterally inverted)"], ans: 0 },
+      { q: 39, sec: 5, tag: "PAPER FOLDING", prompt: "A square sheet is folded in half left-to-right, then folded top-to-bottom, and a circular hole is punched through the center of the folded quadrant. When fully unfolded, how many holes appear?", options: ["2", "4", "6", "8"], ans: 1 },
+      { q: 40, sec: 5, tag: "3D REVOLUTION", prompt: "Which 3D solid is formed when a right-angled triangle is revolved 360° around its perpendicular height?", options: ["Cylinder", "Sphere", "Right Circular Cone", "Frustum"], ans: 2 },
+      { q: 41, sec: 5, tag: "WATER REFLECTION", prompt: "If the water image (horizontal reflection) of a digital/analog clock reads '10:20', what is the actual time?", options: ["10:10", "08:10", "07:50", "10:40"], ans: 1 },
+      { q: 42, sec: 5, tag: "CUBE NETS", prompt: "Three views of a cube show: View 1 (A top, B front, C right); View 2 (A top, C front, D right); View 3 (A top, D front, E right). Which letter is OPPOSITE to B?", options: ["C", "D", "E", "F"], ans: 1 },
+      { q: 43, sec: 5, tag: "FORM PERCEPTION", prompt: "How many triangles are formed inside a square when both diagonals and one mid-segment connecting the midpoints of two opposite sides are drawn?", options: ["8", "10", "12", "14"], ans: 2 },
+      { q: 44, sec: 5, tag: "CLOCK GEOMETRY", prompt: "A clock shows 3:15. If the minute hand points East, in which direction does the hour hand point?", options: ["Exact East", "Slightly South of East", "Slightly North of East", "South-East"], ans: 1 },
+      { q: 45, sec: 5, tag: "3D FOLDING", prompt: "Which of the following 2D nets CANNOT fold into a closed 3D cube?", options: ["Cross shape (4 vertical, 1 left, 1 right)", "T-shape (3 top horizontal, 3 vertical stem)", "2×3 solid rectangle of 6 squares", "Zig-zag staircase of 6 squares"], ans: 2 },
+      { q: 46, sec: 5, tag: "PLANAR ROTATION", prompt: "Rotating the capital letter 'N' by 180° in its own plane produces which letter?", options: ["Z", "N", "M", "U"], ans: 1 },
+      { q: 47, sec: 5, tag: "CROSS-SECTIONS", prompt: "A hollow cylinder is sliced at a 45° angle completely through its curved wall without cutting its circular bases. What is the shape of the cross-section?", options: ["Circle", "Parabola", "Ellipse", "Rectangle"], ans: 2 },
+      { q: 48, sec: 5, tag: "VECTOR DISPLACEMENT", prompt: "From base, a patrol walks 6 km North, turns right and walks 8 km, turns right and walks 6 km. How far and in what direction is it from base?", options: ["8 km East", "8 km West", "14 km East", "6 km South"], ans: 0 },
+
+      // --- SECTION 6: PERCEPTUAL SPEED (Q49 - Q58) ---
+      { q: 49, sec: 6, tag: "PERCEPTUAL SPEED", prompt: "Select the 100% EXACT match for Target Code:\nIND-8849-XQV-02", options: ["IND-8849-XQV-02", "IND-8894-XQV-02", "IND-8849-XWQ-02", "IND-8489-XQV-02"], ans: 0 },
+      { q: 50, sec: 6, tag: "PERCEPTUAL SPEED", prompt: "Select the 100% EXACT match for Target Serial:\n772109448215", options: ["772109448251", "772109484215", "772109448215", "771209448215"], ans: 2 },
+      { q: 51, sec: 6, tag: "PERCEPTUAL SPEED", prompt: "Select the 100% EXACT match for Roster Entry:\nCapt. R.K. Deshmukh, 14 Rajputana Rifles", options: ["Capt. R.K. Deshmukh, 14 Rajputana Rifles", "Capt. R.K. Desmukh, 14 Rajputana Rifles", "Capt. K.R. Deshmukh, 14 Rajputana Rifles", "Capt. R.K. Deshmukh, 41 Rajputana Rifles"], ans: 0 },
+      { q: 52, sec: 6, tag: "ANOMALY DETECTION", prompt: "Which option is DIFFERENT from the target code:\nAX99-PL04-MN77", options: ["AX99-PL04-MN77", "AX99-PL04-MN77", "AX99-PL40-MN77", "AX99-PL04-MN77"], ans: 2 },
+      { q: 53, sec: 6, tag: "SYMBOL-DIGIT DECODE", prompt: "Key: ★=3, ▲=7, ●=1, ■=9, ◆=5\nDecode the sequence: ▲ ■ ★ ◆ ●", options: ["79351", "79531", "73951", "97351"], ans: 0 },
+      { q: 54, sec: 6, tag: "BINARY SCAN", prompt: "Select the 100% EXACT match for Binary String:\n0011011100101", options: ["0011011100110", "0011011100101", "0010111100101", "0011101100101"], ans: 1 },
+      { q: 55, sec: 6, tag: "URL VERIFICATION", prompt: "Select the 100% EXACT match for Endpoint:\nhttps://joinindianarmy.nic.in/auth/login_v2", options: ["https://joinindianarmy.nic.in/auth/login_v2", "https://joinindianarmy.nic.in/auth/Iogin_v2", "https://joinindianarmy.nic.in/autb/login_v2", "https://joinindainarmy.nic.in/auth/login_v2"], ans: 0 },
+      { q: 56, sec: 6, tag: "PAIR MATCHING", prompt: "Count how many pairs below are 100% IDENTICAL:\n1) 45902-K | 45902-K\n2) 88317-M | 88371-M\n3) 90124-P | 90124-P\n4) 66721-R | 66721-B", options: ["1", "2", "3", "4"], ans: 1 },
+      { q: 57, sec: 6, tag: "REVERSE SCAN", prompt: "Which option is the exact character-by-character REVERSE of:\nPQ74-ZM91", options: ["19MZ-47QP", "91MZ-74QP", "19ZM-47PQ", "19MZ-74QP"], ans: 0 },
+      { q: 58, sec: 6, tag: "COORDINATE SCAN", prompt: "Select the 100% EXACT match for Grid Reference:\n28°36'50.4\"N 77°12'32.8\"E", options: ["28°36'50.4\"N 77°12'32.8\"E", "28°36'50.4\"N 77°21'32.8\"E", "28°63'50.4\"N 77°12'32.8\"E", "28°36'50.4\"N 77°12'23.8\"E"], ans: 0 },
+
+      // --- SECTION 7: LINGUISTIC ABILITY (Q59 - Q70) ---
+      { q: 59, sec: 7, tag: "RC RECALL (FROM 90s PASSAGE)", prompt: "According to the passage you just read, what is the primary operational bottleneck of integrated sensor networks?", options: ["High financial cost of drones", "Sensor saturation causing operator cognitive fatigue", "Complete failure of radar in rugged terrain", "Lack of satellite bandwidth"], ans: 1 },
+      { q: 60, sec: 7, tag: "RC RECALL (FROM 90s PASSAGE)", prompt: "Which three sensor types were explicitly mentioned in the passage?", options: ["Thermal satellites, sonar, and lidar", "Electro-optical drones, phased-array radars, and acoustic sensors", "Infrared cameras, seismic probes, and balloons", "Radars, underwater hydrophones, and UAVs"], ans: 1 },
+      { q: 61, sec: 7, tag: "RC RECALL (FROM 90s PASSAGE)", prompt: "What triggers the thousands of false alerts mentioned by the author?", options: ["Enemy jamming", "Equipment corrosion", "Wildlife or weather shifts", "Operator input errors"], ans: 2 },
+      { q: 62, sec: 7, tag: "RC CONTEXT VOCABULARY", prompt: "In the context of the passage, the word 'decisive' most closely means:", options: ["Hesitant", "Conclusive and timely", "Experimental", "Delegated"], ans: 1 },
+      { q: 63, sec: 7, tag: "VERBAL ANALOGY", prompt: "ANEMOMETER : WIND :: HYGROMETER : ?", options: ["Pressure", "Humidity", "Altitude", "Density"], ans: 1 },
+      { q: 64, sec: 7, tag: "SYNONYM", prompt: "Choose the word closest in meaning to INTREPID:", options: ["Cautious", "Fearless", "Hesitant", "Deceptive"], ans: 1 },
+      { q: 65, sec: 7, tag: "ANTONYM", prompt: "Choose the word opposite in meaning to EPHEMERAL:", options: ["Fleeting", "Transient", "Enduring", "Fragile"], ans: 2 },
+      { q: 66, sec: 7, tag: "ANAGRAM", prompt: "Rearrange all letters of LISTEN to form a word meaning 'complete absence of sound':", options: ["TINSEL", "SILENT", "INLETS", "ENLIST"], ans: 1 },
+      { q: 67, sec: 7, tag: "ODD WORD OUT", prompt: "Identify the odd term out from the operational group:", options: ["Reconnaissance", "Surveillance", "Espionage", "Logistics"], ans: 3 },
+      { q: 68, sec: 7, tag: "SENTENCE COMPLETION", prompt: "Despite severe logistical bottlenecks, the forward engineering unit ________ the Bailey bridge six hours ahead of schedule.", options: ["abandoned", "erected", "obstructed", "rescinded"], ans: 1 },
+      { q: 69, sec: 7, tag: "COMMAND ANALOGY", prompt: "CAPTAIN : REGIMENT :: COMMANDER : ?", options: ["Platoon", "Squadron / Vessel", "Section", "Corps"], ans: 1 },
+      { q: 70, sec: 7, tag: "ONE-WORD SUBSTITUTION", prompt: "A soldier who leaves their military post without permission and with no intention of returning is a:", options: ["Conscript", "Deserter", "Mercenary", "Sentry"], ans: 1 }
+    ];
+
+    // --- APPEND SECTION 8: OPAM SELF-PROFILING INVENTORY (Q71 - Q130) ---
+    const LIKERT_OPTIONS = [
+      "Strongly Disagree",
+      "Disagree",
+      "Neutral",
+      "Agree",
+      "Strongly Agree"
+    ];
+
+    const OPAM_LIKERT_STATEMENTS = [
+      "I naturally take charge when a group seems confused about how to start a task.", // 71 (Pair A1+)
+      "I feel anxious when my daily routine is disrupted unexpectedly.", // 72
+      "I enjoy solving complex puzzles even when there is no reward attached.", // 73
+      "I sometimes feel irritated when teammates work slower than I do.", // 74 (Honesty 1)
+      "I double-check my work thoroughly before submitting it.", // 75
+      "In heated arguments, I stay calm and focus on facts rather than tone.", // 76 (Pair B1+)
+      "I prefer following proven procedures rather than experimenting with untested methods.", // 77
+      "I find it easy to strike up conversations with complete strangers.", // 78
+      "When I make a mistake, I admit it immediately without making excuses.", // 79 (Pair E1+)
+      "I have never once felt jealous of someone else's success.", // 80 (Lie Scale 1)
+      "I stay focused on long tasks even when the initial excitement wears off.", // 81 (Pair D1+)
+      "I often worry about outcomes that are completely outside my control.", // 82
+      "I actively seek feedback from critics to improve my performance.", // 83
+      "I hesitate to speak up in a group if my opinion goes against the majority.", // 84 (Pair C1-)
+      "I organize my workspace and belongings systematically.", // 85
+      "I can quickly adjust my plan when new ground realities emerge.", // 86
+      "I sometimes procrastinate on tasks I find boring.", // 87 (Honesty 2)
+      "I feel energized after working closely with a large team all day.", // 88
+      "I remain composed under tight deadlines when others start panicking.", // 89 (Pair F1+)
+      "I prefer practical hands-on action over lengthy theoretical discussions.", // 90
+      "When a team lacks direction, I usually wait for someone else to step up first.", // 91 (Pair A2- vs 71)
+      "I carefully weigh pros and cons before making high-stakes decisions.", // 92
+      "I hold grudges when someone treats me unfairly.", // 93
+      "I enjoy learning skills outside my primary field of study or work.", // 94
+      "I have never told even a harmless white lie in my entire life.", // 95 (Lie Scale 2)
+      "Physical fitness and discipline are non-negotiable parts of my lifestyle.", // 96
+      "I get discouraged quickly if my first attempt at a difficult task fails.", // 97
+      "I make sure quieter members of a group get a chance to share their ideas.", // 98
+      "During tense disagreements, my emotions often override my logic.", // 99 (Pair B2- vs 76)
+      "I enjoy taking calculated risks when the potential payoff is meaningful.", // 100
+      "I keep my promises even when doing so becomes inconvenient for me.", // 101
+      "I find it difficult to concentrate in noisy or chaotic environments.", // 102
+      "I regularly set measurable short-term goals for myself.", // 103
+      "I feel uncomfortable delegating important work to teammates.", // 104
+      "I state my honest viewpoint clearly even when everyone else disagrees.", // 105 (Pair C2+ vs 84)
+      "I recover quickly after experiencing a major setback or disappointment.", // 106
+      "I enjoy mentoring or helping juniors understand difficult concepts.", // 107
+      "I sometimes speak before fully thinking through how my words will sound.", // 108 (Honesty 3)
+      "I strictly follow rules even when nobody is watching.", // 109
+      "I am curious about how mechanical, digital, or tactical systems work internally.", // 110
+      "I frequently leave projects unfinished once they become repetitive.", // 111 (Pair D2- vs 81)
+      "I stay optimistic when facing tough odds.", // 112
+      "I prefer working alone rather than coordinating with a group.", // 113
+      "I notice small details that most people overlook.", // 114
+      "I have never felt nervous before an important exam or interview.", // 115 (Lie Scale 3)
+      "I am willing to sacrifice personal comfort to help my team meet a deadline.", // 116
+      "I get frustrated easily when plans change at the last minute.", // 117
+      "I persuade others effectively using logical reasoning rather than force.", // 118
+      "When things go wrong, my first instinct is to defend myself from blame.", // 119 (Pair E2- vs 79)
+      "I adapt easily to unfamiliar environments and new cultures.", // 120
+      "I prioritize urgent duties over personal leisure every time.", // 121
+      "I feel drained when I have to make rapid decisions back-to-back.", // 122
+      "I treat subordinates and seniors with the exact same level of respect.", // 123
+      "I actively look for backup plans before executing a primary strategy.", // 124
+      "High time pressure causes me to make careless errors.", // 125 (Pair F2- vs 89)
+      "I enjoy physical outdoor challenges that test my endurance.", // 126
+      "I reflect on my daily performance to identify what I could do better tomorrow.", // 127
+      "I sometimes feel self-doubt before taking on a brand-new responsibility.", // 128 (Honesty 4)
+      "I stand up for a teammate who is being treated unfairly.", // 129
+      "I maintain steady energy and morale during monotonous tasks." // 130
+    ];
+
+    OPAM_LIKERT_STATEMENTS.forEach((stmt, idx) => {
+      QUESTIONS.push({
+        q: 71 + idx,
+        sec: 8,
+        tag: "OPAM • SELF-PROFILING (LIKERT)",
+        prompt: stmt,
+        options: LIKERT_OPTIONS,
+        ans: null
+      });
+    });
+
+    // --- APPEND SECTION 9: OPAM FORCED-CHOICE IPSATIVE PAIRS (Q131 - Q165) ---
+    const OPAM_FORCED_PAIRS = [
+      ["I stick strictly to the rulebook.", "I bend minor rules to get the mission done on time."],
+      ["I analyze every angle before acting.", "I act quickly and adjust along the way."],
+      ["I focus on maintaining team harmony.", "I focus on pushing the team for maximum output."],
+      ["I lead from the front by personal example.", "I coordinate from a central vantage point to oversee everyone."],
+      ["I am known for creative, out-of-the-box ideas.", "I am known for reliable, disciplined execution."],
+      ["I stay calm during emergencies.", "I stay enthusiastic during routine tasks."],
+      ["I give blunt, direct feedback.", "I give tactful, encouraging feedback."],
+      ["I master deep technical details.", "I see the broad strategic picture."],
+      ["I take responsibility when my team fails.", "I share credit generously when my team succeeds."],
+      ["I thrive under intense competition.", "I thrive in collaborative partnerships."],
+      ["I prepare exhaustive contingency plans.", "I improvise smoothly when surprises hit."],
+      ["I value punctuality above almost everything.", "I value adaptability above almost everything."],
+      ["I listen carefully before speaking.", "I articulate ideas rapidly to spark discussion."],
+      ["I trust verified data and facts.", "I trust my trained intuition and gut instinct."],
+      ["I finish one task completely before starting the next.", "I juggle multiple priorities simultaneously."],
+      ["I confront interpersonal conflict immediately.", "I let tempers cool before addressing conflict."],
+      ["I am physically courageous in tough conditions.", "I am morally courageous in unpopular decisions."],
+      ["I motivate others through logical clarity.", "I motivate others through high personal energy."],
+      ["I notice risks and potential flaws early.", "I spot opportunities and strengths early."],
+      ["I remain loyal to my teammates.", "I remain objective when evaluating teammates."],
+      ["I work tirelessly until a problem is solved.", "I seek expert advice quickly to save time."],
+      ["I prefer clear hierarchical command.", "I prefer open peer-to-peer brainstorming."],
+      ["I keep my emotions private under stress.", "I stay approachable and empathetic under stress."],
+      ["I double-check safety protocols rigorously.", "I maintain high operational speed."],
+      ["I learn fastest by reading and studying.", "I learn fastest by doing and testing."],
+      ["I hold myself to perfectionist standards.", "I prioritize practical 'good-enough-now' delivery."],
+      ["I defend my well-researched stance firmly.", "I revise my stance readily when shown new evidence."],
+      ["I step forward in unfamiliar situations.", "I provide steady support when others lead."],
+      ["I keep calm when criticized unfairly.", "I stay determined when facing repeated obstacles."],
+      ["I organize resources efficiently.", "I inspire people effectively."],
+      ["I enforce accountability strictly.", "I mentor struggling teammates patiently."],
+      ["I focus on immediate tactical goals.", "I focus on long-term mission sustainability."],
+      ["I stay composed in chaotic environments.", "I stay alert in quiet, monotonous environments."],
+      ["I communicate concisely in bullet points.", "I communicate thoroughly with full context."],
+      ["I rely on self-discipline when motivation drops.", "I rely on sense of purpose when energy drops."]
+    ];
+
+    OPAM_FORCED_PAIRS.forEach((pair, idx) => {
+      QUESTIONS.push({
+        q: 131 + idx,
+        sec: 9,
+        tag: "OPAM • FORCED-CHOICE PAIR",
+        prompt: "Select the statement that describes your natural behavior MORE accurately:",
+        options: pair,
+        ans: null
+      });
+    });
+
+    // --- APPEND SECTION 10: OPAM OBJECTIVE SITUATION REACTIONS (Q166 - Q190) ---
+    const OPAM_SRTS = [
+      { prompt: "During a night trek, your team's GPS battery dies and light fog sets in 3 km from base camp. You will:", options: ["Keep walking fast in the assumed direction before fog thickens", "Halt briefly, orient using compass/map landmarks, assign front/rear scouts, and move at a controlled pace", "Camp immediately and wait until morning", "Split the team into two groups to search for the trail"] },
+      { prompt: "Two key members of your project team refuse to speak to each other a day before final presentation. You will:", options: ["Reassign their sections to yourself and work all night", "Speak to both separately, align them on the shared deadline, and clearly divide non-overlapping speaking parts", "Report both of them to the supervisor immediately", "Cancel their parts of the presentation"] },
+      { prompt: "You notice a senior colleague accidentally uploaded confidential exam/selection data to a public folder. You will:", options: ["Ignore it since they are senior to you", "Immediately alert them privately so they can revoke access, and verify the file is secured", "Post about the mistake in the group chat", "Delete the folder yourself without telling anyone"] },
+      { prompt: "While leading a relief distribution drive, supplies run short with 40 families still waiting in line. You will:", options: ["Quietly leave the venue before the crowd gets angry", "Inform the crowd transparently, distribute emergency tokens, and coordinate immediate replenishment from the nearest depot", "Give remaining supplies only to those who shout loudest", "Blame the logistics vendor publicly"] },
+      { prompt: "During a timed group task, one teammate freezes up due to nervousness and drops an essential prop. You will:", options: ["Scold them loudly so they wake up", "Calmly reassure them, assign them a simpler supportive role, and keep the group moving", "Take over their task without saying a word", "Ask the assessor to replace them"] },
+      { prompt: "You realize 10 minutes before submitting a group report that a calculation you did earlier has a minor error affecting the final table. You will:", options: ["Submit it as-is hoping nobody checks the math", "Quickly recalculate the exact figures, update the table, and inform your team lead", "Delete the table from the report", "Blame the error on faulty raw data"] },
+      { prompt: "On a train journey, an elderly passenger in your compartment suddenly complains of severe chest pain and sweating. You will:", options: ["Offer them water and ask them to lie down", "Alert the TTE/railway helpline immediately for emergency medical aid at the next station while checking if a doctor is onboard", "Wait to see if the pain subsides in an hour", "Pull the emergency chain between stations in a remote forest"] },
+      { prompt: "Your commander/manager gives you an instruction that contradicts a safety protocol you know well. You will:", options: ["Refuse flatly in front of everyone", "Execute it blindly without raising the concern", "Respectfully point out the specific safety risk privately and suggest a safe way to achieve the objective", "Delay the task indefinitely"] },
+      { prompt: "You are appointed captain of a sports team whose morale is low after three consecutive losses. You will:", options: ["Drop half the players before the next match", "Review match footage objectively, highlight specific fixable mistakes, and run focused drills to rebuild confidence", "Give an aggressive speech threatening removal", "Tell them winning does not matter"] },
+      { prompt: "While returning from an outdoor camp, a sudden flash flood blocks the main bridge on your route. You will:", options: ["Attempt to drive across before water rises further", "Move to higher ground, verify alternate routes on the map, and inform base of your revised ETA", "Abandon the vehicle and swim across", "Wait right beside the rising riverbank"] },
+      { prompt: "A close friend asks you to share the questions from a screening test you just finished so they can prepare. You will:", options: ["Share the exact questions since they are your close friend", "Decline politely, explaining integrity rules, and share general preparation tips instead", "Give them fake questions to mislead them", "Ignore their messages permanently"] },
+      { prompt: "During a college fest you are organizing, the main power generator fails 20 minutes before the chief guest arrives. You will:", options: ["Panic and blame the electrical contractor", "Switch critical stage lines to backup inverter/battery, dispatch a team to fix the generator, and adjust the welcome sequence smoothly", "Postpone the event by two hours", "Cancel the audio-visual segment completely"] },
+      { prompt: "You are assigned to work with a teammate who has a reputation for being argumentative and uncooperative. You will:", options: ["Request a team transfer immediately", "Define clear individual deliverables upfront, listen to their inputs objectively, and keep discussions task-focused", "Avoid talking to them for the entire project", "Do their share of the work silently"] },
+      { prompt: "While riding your bike at night, you witness a hit-and-run accident where the victim is injured on the road. You will:", options: ["Speed away to avoid police questioning", "Secure the area with hazard lights, call emergency ambulance/police (112), and administer basic first aid until help arrives", "Record a video for social media first", "Chase the fleeing car alone"] },
+      { prompt: "Your team has two viable approaches to solve a technical problem, and time is running out to decide. You will:", options: ["Flip a coin", "Compare both against time/resource constraints for 2 minutes, pick the more reliable option, and commit everyone to execution", "Keep debating until everyone agrees 100%", "Let each member use whichever method they prefer"] },
+      { prompt: "You discover that a junior member of your club accidentally damaged expensive equipment and hid it out of fear. You will:", options: ["Publicly humiliate them in front of the club", "Speak to them privately, appreciate honesty once they admit it, arrange repairs, and enforce proper sign-out logs", "Cover up the damage and pretend nothing happened", "Expel them from the club immediately"] },
+      { prompt: "Halfway through a 10 km endurance run, you develop a painful side stitch and heavy fatigue. You will:", options: ["Quit the run immediately", "Slow your pace slightly, regulate deep rhythmic breathing until the stitch eases, and finish strong", "Sprint as fast as possible to get it over with", "Walk the rest of the way"] },
+      { prompt: "You receive conflicting priorities from two different department heads on the same morning. You will:", options: ["Ignore both until they sort it out", "Clarify deadlines with both, propose a prioritized sequence, and get confirmation", "Work on whichever task is easier", "Complain to HR about poor management"] },
+      { prompt: "During a community cleanliness drive, local residents watch skeptically without participating. You will:", options: ["Lecture them on civic duty", "Lead by example enthusiastically, keep the mood positive, and politely invite nearby youth to join a specific task", "Pack up early since residents are not helping", "Argue with onlookers"] },
+      { prompt: "Your laptop crashes permanently two days before your final thesis/project submission, and your last backup is 4 days old. You will:", options: ["Ask for a two-week extension", "Recover whatever files exist on the drive, borrow a system, and work focused extra hours on the 4-day-old backup to finish on time", "Submit the incomplete 4-day-old version", "Give up on the submission"] },
+      { prompt: "You notice a teammate taking credit for an idea you proposed during a briefing. You will:", options: ["Interrupt aggressively to claim credit", "Let the briefing finish smoothly, then casually follow up with concrete execution details that naturally establish your ownership", "Sulk and stop contributing to the team", "Confront them angrily in front of the boss"] },
+      { prompt: "While trekking in a forest reserve, you spot smoke rising from dry undergrowth off the trail. You will:", options: ["Ignore it assuming it is a campfire", "Assess wind direction, alert forest authorities with exact GPS coordinates, and keep your group clear of downwind paths", "Run toward the smoke alone to stamp it out", "Take photos and keep trekking"] },
+      { prompt: "You are tasked with teaching a complex topic to a batch with widely varying skill levels. You will:", options: ["Teach only at the advanced level so top performers stay engaged", "Build from core fundamentals with visual examples, then layer advanced problems and pair peers for practice", "Hand out a textbook and tell them to self-study", "Teach only basic definitions"] },
+      { prompt: "Under extreme deadline pressure, you feel yourself getting irritated at minor questions from juniors. You will:", options: ["Snap at them so they stop disturbing you", "Pause for 5 seconds, set a clear 15-minute window to address all their doubts at once, and return to deep work", "Turn off your phone and ignore everyone", "Delegate your own work to them"] },
+      { prompt: "After failing to clear an important selection stage despite months of preparation, your immediate next step is to:", options: ["Blame bad luck or biased assessors", "Take a brief rest, objectively audit weak areas across cognitive and personality parameters, and start a structured improvement cycle", "Quit trying altogether", "Repeat the exact same preparation without changes"] }
+    ];
+
+    OPAM_SRTS.forEach((srt, idx) => {
+      QUESTIONS.push({
+        q: 166 + idx,
+        sec: 10,
+        tag: "OPAM • SITUATION REACTION (SRT)",
+        prompt: srt.prompt,
+        options: srt.options,
+        ans: null
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // 3. STATE MANAGEMENT & TIMERS
+    // -------------------------------------------------------------------------
+    let state = {
+      status: "start", // start | brief | stimulus | question | result
+      currentSecIdx: 0,
+      currentQIdx: 0, // 0 to 189
+      totalSecLeft: 90 * 60, // 5400s
+      secSecLeft: 240,
+      qSecLeft: 30,
+      stimSecLeft: 0,
+      answers: new Array(190).fill(null),
+      latenciesMs: new Array(190).fill(null),
+      qStartTimestamp: null,
+      flashCompleted: new Set() // tracks Q17-Q24 5s flash completion
+    };
+
+    let masterInterval = null;
+    let audioCtx = null;
+
+    // Build Top Visual 10-Section Scale Track
+    function initUpperScale() {
+      const track = document.getElementById("sectionScaleTrack");
+      track.innerHTML = "";
+      SECTIONS.forEach((s, idx) => {
+        const seg = document.createElement("div");
+        seg.id = `scale-seg-${idx}`;
+        seg.title = `${s.title} (Q${s.startQ}–Q${s.endQ})`;
+        seg.className = "h-full rounded-full bg-zinc-800 transition-all duration-300";
+        track.appendChild(seg);
+      });
+    }
+
+    function formatMMSS(sec) {
+      const s = Math.max(0, Math.floor(sec));
+      const m = Math.floor(s / 60);
+      const rem = s % 60;
+      return `${String(m).padStart(2, "0")}:${String(rem).padStart(2, "0")}`;
+    }
+
+    function getPerQuestionBudget(secObj) {
+      const count = secObj.endQ - secObj.startQ + 1;
+      return Math.max(15, Math.floor(secObj.durationSec / count));
+    }
+
+    function updateHUD() {
+      // Timers
+      document.getElementById("totalTimerDisplay").textContent = formatMMSS(state.totalSecLeft);
+      document.getElementById("secTimerDisplay").textContent = formatMMSS(state.secSecLeft);
+
+      const qTimerEl = document.getElementById("qTimerDisplay");
+      const qTimerBox = document.getElementById("qTimerBox");
+      const qTimerLabel = document.getElementById("qTimerLabel");
+
+      if (state.status === "stimulus") {
+        qTimerLabel.textContent = "Stimulus Flash";
+        qTimerEl.textContent = `00:${String(state.stimSecLeft).padStart(2, "0")}`;
+        if (state.stimSecLeft <= 5) qTimerBox.classList.add("urgent-pulse");
+        else qTimerBox.classList.remove("urgent-pulse");
+      } else {
+        qTimerLabel.textContent = "Per-Q Pace";
+        qTimerEl.textContent = formatMMSS(state.qSecLeft);
+        if (state.qSecLeft <= 8 && state.status === "question") qTimerBox.classList.add("urgent-pulse");
+        else qTimerBox.classList.remove("urgent-pulse");
+      }
+
+      // Upper Scale Counts
+      const attempted = state.answers.filter(a => a !== null).length;
+      const left = 190 - attempted;
+      document.getElementById("hudCurrentQ").textContent = state.currentQIdx + 1;
+      document.getElementById("hudAttempted").textContent = attempted;
+      document.getElementById("hudLeft").textContent = left;
+
+      const secObj = SECTIONS[state.currentSecIdx];
+      document.getElementById("hudPartBadge").textContent = secObj.part;
+      document.getElementById("hudSectionTitle").textContent = secObj.title;
+      document.getElementById("hudNavRule").textContent = `• ${secObj.navRule}`;
+
+      // Segment colors
+      SECTIONS.forEach((s, idx) => {
+        const seg = document.getElementById(`scale-seg-${idx}`);
+        if (!seg) return;
+        if (idx < state.currentSecIdx) {
+          seg.className = "h-full rounded-full bg-emerald-500 transition-all";
+        } else if (idx === state.currentSecIdx) {
+          seg.className = "h-full rounded-full bg-cadetOrange animate-pulse transition-all";
+        } else {
+          seg.className = "h-full rounded-full bg-zinc-800 transition-all";
+        }
+      });
+    }
+
+    function hideAllScreens() {
+      ["startScreen", "sectionBriefScreen", "stimulusScreen", "questionScreen", "resultScreen"].forEach(id => {
+        document.getElementById(id).classList.add("hidden");
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. EXAM FLOW & SECTION TRANSITIONS
+    // -------------------------------------------------------------------------
+    function startFullAssessment() {
+      initAudioContext();
+      initUpperScale();
+      state.status = "brief";
+      state.currentSecIdx = 0;
+      state.currentQIdx = 0;
+      state.totalSecLeft = 90 * 60;
+
+      document.getElementById("upperScaleBar").classList.remove("hidden");
+      document.getElementById("secTimerBox").classList.remove("hidden");
+      document.getElementById("secTimerBox").classList.add("flex");
+      document.getElementById("endExamBtn").classList.remove("hidden");
+
+      startMasterClock();
+      showSectionBriefing(0);
+    }
+
+    function startMasterClock() {
+      if (masterInterval) clearInterval(masterInterval);
+      masterInterval = setInterval(() => {
+        if (state.status === "result" || state.status === "start") return;
+
+        // Global 90-minute timer
+        state.totalSecLeft--;
+        if (state.totalSecLeft <= 0) {
+          finishAssessment();
+          return;
+        }
+
+        if (state.status === "stimulus") {
+          state.secSecLeft--;
+          state.stimSecLeft--;
+          if (state.stimSecLeft <= 0) {
+            completeCurrentStimulus();
+          }
+        } else if (state.status === "question") {
+          state.secSecLeft--;
+          state.qSecLeft--;
+
+          // Auto-advance question if per-question timer expires on forward-only sections
+          if (state.qSecLeft <= 0) {
+            const secObj = SECTIONS[state.currentSecIdx];
+            if (!secObj.allowBack) {
+              recordLatencyIfNeeded();
+              advanceToNextQuestionOrSection();
+              return;
+            } else {
+              state.qSecLeft = getPerQuestionBudget(secObj);
+            }
+          }
+
+          // Section time expired
+          if (state.secSecLeft <= 0) {
+            moveToNextSection();
+            return;
+          }
+        }
+
+        updateHUD();
+      }, 1000);
+    }
+
+    function showSectionBriefing(secIdx) {
+      state.status = "brief";
+      state.currentSecIdx = secIdx;
+      const secObj = SECTIONS[secIdx];
+      state.currentQIdx = secObj.startQ - 1;
+      state.secSecLeft = secObj.durationSec;
+      state.qSecLeft = getPerQuestionBudget(secObj);
+
+      hideAllScreens();
+      document.getElementById("sectionBriefScreen").classList.remove("hidden");
+      document.getElementById("briefPartTag").textContent = secObj.part;
+      document.getElementById("briefTitle").textContent = secObj.title;
+      document.getElementById("briefDesc").textContent = secObj.desc;
+      const count = secObj.endQ - secObj.startQ + 1;
+      document.getElementById("briefQCount").textContent = `Q${secObj.startQ} – Q${secObj.endQ} (${count})`;
+      document.getElementById("briefTime").textContent = formatMMSS(secObj.durationSec);
+      document.getElementById("briefNav").textContent = "Strict One-Way";
+      updateHUD();
+    }
+
+    function beginActiveSection() {
+      const secObj = SECTIONS[state.currentSecIdx];
+      if (secObj.hasInitialStimulus) {
+        launchSectionStimulus(secObj);
+      } else {
+        renderQuestion(state.currentQIdx);
+      }
+    }
+
+    function launchSectionStimulus(secObj) {
+      state.status = "stimulus";
+      state.stimSecLeft = secObj.stimulusDuration;
+      hideAllScreens();
+      document.getElementById("stimulusScreen").classList.remove("hidden");
+      document.getElementById("stimCountdown").textContent = `${state.stimSecLeft}s`;
+
+      const stimContent = document.getElementById("stimContent");
+      if (secObj.stimulusType === "map") {
+        document.getElementById("stimBadge").textContent = "15-SECOND TACTICAL MAP";
+        document.getElementById("stimTitle").textContent = "Memorize Installations, Highway, Dirt Track, River & Minefield";
+        stimContent.innerHTML = renderTacticalMapSVG();
+      } else if (secObj.stimulusType === "passage") {
+        document.getElementById("stimBadge").textContent = "90-SECOND READING PASSAGE";
+        document.getElementById("stimTitle").textContent = "Read Carefully — Passage Will Vanish Before Q59–Q62";
+        stimContent.innerHTML = `
+          <div class="p-6 sm:p-8 rounded-2xl bg-obsidian border border-borderDark text-base sm:text-xl leading-relaxed text-zinc-100 font-medium">
+            “Modern border surveillance increasingly relies on <span class="text-cadetOrange font-bold">integrated sensor fusion</span> rather than isolated watchposts. By combining low-altitude <span class="text-white font-bold underline decoration-cadetOrange">electro-optical drones</span>, ground-based <span class="text-white font-bold underline decoration-cadetOrange">phased-array radars</span>, and <span class="text-white font-bold underline decoration-cadetOrange">acoustic sensors</span>, field commanders gain real-time situational awareness across rugged terrain. However, <span class="text-cadetOrange font-bold">sensor saturation</span> remains a critical bottleneck: when automated systems generate thousands of false alerts from <span class="text-white font-bold">wildlife or weather shifts</span>, human operators experience <span class="text-white font-bold">cognitive fatigue</span>, slowing down <span class="text-cadetOrange font-bold">decisive</span> tactical response.”
+          </div>
+        `;
+      }
+      updateHUD();
+    }
+
+    function skipStimulusEarly() {
+      completeCurrentStimulus();
+    }
+
+    function completeCurrentStimulus() {
+      if (state.currentSecIdx === 2) {
+        // Section 3 per-question 5s flash completed
+        state.flashCompleted.add(state.currentQIdx);
+      }
+      renderQuestion(state.currentQIdx);
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. QUESTION RENDERING & PER-QUESTION FLASH (SECTION 3)
+    // -------------------------------------------------------------------------
+    function renderQuestion(qIdx) {
+      state.currentQIdx = qIdx;
+      const qObj = QUESTIONS[qIdx];
+      const secObj = SECTIONS[qObj.sec - 1];
+      state.currentSecIdx = qObj.sec - 1;
+
+      // Section 3 Working Memory: Trigger 5-second flash before showing options
+      if (qObj.sec === 3 && !state.flashCompleted.has(qIdx)) {
+        state.status = "stimulus";
+        state.stimSecLeft = 5;
+        hideAllScreens();
+        document.getElementById("stimulusScreen").classList.remove("hidden");
+        document.getElementById("stimBadge").textContent = `Q${qObj.q} • 5-SECOND MEMORY FLASH`;
+        document.getElementById("stimTitle").textContent = "Hold This Data in Working Memory";
+        document.getElementById("stimCountdown").textContent = "05s";
+        document.getElementById("stimContent").innerHTML = `
+          <div class="py-12 px-4 rounded-2xl bg-obsidian border border-borderDark flex items-center justify-center text-center">
+            ${qObj.flashHtml}
+          </div>
+        `;
+        updateHUD();
+        return;
+      }
+
+      state.status = "question";
+      state.qSecLeft = getPerQuestionBudget(secObj);
+      state.qStartTimestamp = performance.now();
+
+      hideAllScreens();
+      document.getElementById("questionScreen").classList.remove("hidden");
+
+      document.getElementById("qNumberTag").textContent = `Q${qObj.q}`;
+      document.getElementById("qSubTag").textContent = qObj.tag;
+
+      // OPAM latency badge
+      const latBadge = document.getElementById("latencyIndicator");
+      if (qObj.sec >= 8) latBadge.classList.remove("hidden");
+      else latBadge.classList.add("hidden");
+
+      // Audio Bar (Section 2)
+      const audioBar = document.getElementById("audioControlBar");
+      if (qObj.sec === 2) {
+        audioBar.classList.remove("hidden");
+        document.getElementById("audioStatusText").textContent = `Audio Cue #${qObj.q - 8} ready. Click Play to listen via headset.`;
+      } else {
+        audioBar.classList.add("hidden");
+      }
+
+      // Prompt formatting (preserve line breaks cleanly)
+      const promptEl = document.getElementById("questionPrompt");
+      promptEl.innerHTML = qObj.prompt.replace(/\n/g, "<br><span class='inline-block mt-2 px-3 py-1.5 rounded-lg bg-obsidian border border-borderDark font-mono text-sm sm:text-base text-cadetOrange'>") + (qObj.prompt.includes("\n") ? "</span>" : "");
+      if (qObj.prompt.split("\n").length > 2) {
+        // Multi-line block (like matrix or pairs)
+        const lines = qObj.prompt.split("\n");
+        const header = lines[0];
+        const body = lines.slice(1).join("\n");
+        promptEl.innerHTML = `<div>${header}</div><pre class="mt-3 p-3.5 rounded-xl bg-obsidian border border-borderDark font-mono text-sm sm:text-base text-cadetOrange whitespace-pre-wrap">${body}</pre>`;
+      }
+
+      // Render Options
+      updateOptionStyles();
+
+      const nextBtn = document.getElementById("nextQBtn");
+      if (qIdx === 189) {
+        nextBtn.textContent = "Finish & Generate Report ✓";
+      } else if (qIdx === secObj.endQ - 1) {
+        nextBtn.textContent = "Complete Section →";
+      } else {
+        nextBtn.textContent = "Save & Next →";
+      }
+
+      updateHUD();
+    }
+
+    // Separate helper so selecting/changing options NEVER re-renders the question or resets qSecLeft
+    function updateOptionStyles() {
+      const qObj = QUESTIONS[state.currentQIdx];
+      const optContainer = document.getElementById("optionsContainer");
+      optContainer.innerHTML = "";
+      const letters = ["A", "B", "C", "D", "E"];
+      const currentAns = state.answers[state.currentQIdx];
+
+      qObj.options.forEach((optText, optIdx) => {
+        const isSelected = currentAns === optIdx;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.onclick = () => selectOption(optIdx);
+        btn.className = `option-card w-full text-left p-3.5 sm:p-4 rounded-xl border flex items-center gap-3.5 ${
+          isSelected
+            ? "bg-cadetOrange/20 border-cadetOrange text-white shadow-lg shadow-cadetOrange/10"
+            : "bg-card hover:bg-zinc-800/80 border-borderDark text-zinc-200"
+        }`;
+
+        btn.innerHTML = `
+          <span class="w-8 h-8 rounded-lg font-mono font-black text-sm flex items-center justify-center shrink-0 ${
+            isSelected ? "bg-cadetOrange text-obsidian" : "bg-obsidian text-zinc-400 border border-borderDark"
+          }">
+            ${letters[optIdx]}
+          </span>
+          <span class="text-sm sm:text-base font-medium leading-snug">${optText}</span>
+        `;
+        optContainer.appendChild(btn);
+      });
+    }
+
+    function selectOption(optIdx) {
+      // Save option & update latency without touching qSecLeft or re-initializing question state
+      state.answers[state.currentQIdx] = optIdx;
+      recordLatencyIfNeeded();
+      updateOptionStyles();
+      updateHUD();
+    }
+
+    function recordLatencyIfNeeded() {
+      if (state.qStartTimestamp) {
+        state.latenciesMs[state.currentQIdx] = Math.round(performance.now() - state.qStartTimestamp);
+      }
+    }
+
+    function navigateNext() {
+      recordLatencyIfNeeded();
+      advanceToNextQuestionOrSection();
+    }
+
+    function advanceToNextQuestionOrSection() {
+      const secObj = SECTIONS[state.currentSecIdx];
+      if (state.currentQIdx < secObj.endQ - 1) {
+        renderQuestion(state.currentQIdx + 1);
+      } else {
+        moveToNextSection();
+      }
+    }
+
+    function moveToNextSection() {
+      if (state.currentSecIdx < SECTIONS.length - 1) {
+        showSectionBriefing(state.currentSecIdx + 1);
+      } else {
+        finishAssessment();
+      }
+    }
+
+    // Keyboard Support (A-E Stickered Keys + Enter/Right Arrow; Left Arrow & Backspace blocked)
+    document.addEventListener("keydown", (e) => {
+      if (state.status !== "question") return;
+      const key = e.key.toUpperCase();
+      const map = { A: 0, B: 1, C: 2, D: 3, E: 4 };
+      const qObj = QUESTIONS[state.currentQIdx];
+
+      if (key in map && map[key] < qObj.options.length) {
+        e.preventDefault();
+        selectOption(map[key]);
+      } else if (e.key === "Enter" || e.key === "ArrowRight") {
+        e.preventDefault();
+        navigateNext();
+      } else if (e.key === "ArrowLeft" || e.key === "Backspace") {
+        // Strictly block backward navigation in real SSB mode
+        e.preventDefault();
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // 6. TACTICAL SVG MAP (SECTION 1 STIMULUS)
+    // -------------------------------------------------------------------------
+    function renderTacticalMapSVG() {
+      return `
+        <div class="bg-obsidian border border-borderDark rounded-2xl p-4">
+          <svg viewBox="0 0 660 390" class="w-full max-w-2xl mx-auto h-auto rounded-xl bg-[#0e1116]">
+            <!-- Grid Borders -->
+            <rect x="30" y="20" width="600" height="330" fill="none" stroke="#272733" stroke-width="2" />
+            <line x1="230" y1="20" x2="230" y2="350" stroke="#272733" stroke-dasharray="6,6" />
+            <line x1="430" y1="20" x2="430" y2="350" stroke="#272733" stroke-dasharray="6,6" />
+            <line x1="30" y1="130" x2="630" y2="130" stroke="#272733" stroke-dasharray="6,6" />
+            <line x1="30" y1="240" x2="630" y2="240" stroke="#272733" stroke-dasharray="6,6" />
+
+            <!-- Diagonal River (North-East to South-West) -->
+            <path d="M 610 30 Q 430 140 330 185 T 50 340" fill="none" stroke="#0ea5e9" stroke-width="14" opacity="0.35" />
+            <text x="485" y="125" fill="#38bdf8" font-size="11" font-family="JetBrains Mono" transform="rotate(-28 485 125)">RIVER AXIS</text>
+
+            <!-- Paved Highway: South (MB) -> Center (HQ) -> North (WT) -->
+            <line x1="330" y1="75" x2="330" y2="295" stroke="#ff6b00" stroke-width="5" />
+            <text x="340" y="138" fill="#ff6b00" font-size="10" font-family="JetBrains Mono">PAVED HWY</text>
+
+            <!-- Dirt Track: South-West (FD) -> West (FH) -> North-West (H) -->
+            <line x1="130" y1="75" x2="130" y2="295" stroke="#a1a1aa" stroke-width="3" stroke-dasharray="8,5" />
+            <text x="52" y="138" fill="#a1a1aa" font-size="10" font-family="JetBrains Mono">DIRT TRACK</text>
+
+            <!-- Minefield XXX between HQ (330,185) and AD (530,75) -->
+            <rect x="395" y="102" width="76" height="28" rx="6" fill="#450a0a" stroke="#ef4444" stroke-width="1.5" />
+            <text x="433" y="120" text-anchor="middle" fill="#f87171" font-size="11" font-weight="bold" font-family="JetBrains Mono">XXX MINES</text>
+
+            <!-- 9 Sector Nodes -->
+            <!-- NW: Helipad -->
+            <g transform="translate(130,75)">
+              <rect x="-65" y="-24" width="130" height="48" rx="8" fill="#191921" stroke="#ffffff" stroke-width="1.5" />
+              <text y="-3" text-anchor="middle" fill="#ff6b00" font-size="12" font-weight="bold" font-family="JetBrains Mono">NW: HELIPAD (H)</text>
+              <text y="14" text-anchor="middle" fill="#a1a1aa" font-size="10" font-family="Inter">North-West</text>
+            </g>
+
+            <!-- N: Watchtower -->
+            <g transform="translate(330,75)">
+              <rect x="-72" y="-24" width="144" height="48" rx="8" fill="#191921" stroke="#ff6b00" stroke-width="1.5" />
+              <text y="-3" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold" font-family="JetBrains Mono">N: WATCHTOWER (WT)</text>
+              <text y="14" text-anchor="middle" fill="#a1a1aa" font-size="10" font-family="Inter">North</text>
+            </g>
+
+            <!-- NE: Ammo Depot -->
+            <g transform="translate(530,75)">
+              <rect x="-72" y="-24" width="144" height="48" rx="8" fill="#191921" stroke="#ffffff" stroke-width="1.5" />
+              <text y="-3" text-anchor="middle" fill="#ff6b00" font-size="12" font-weight="bold" font-family="JetBrains Mono">NE: AMMO DEPOT (AD)</text>
+              <text y="14" text-anchor="middle" fill="#a1a1aa" font-size="10" font-family="Inter">North-East</text>
+            </g>
+
+            <!-- W: Field Hospital -->
+            <g transform="translate(130,185)">
+              <rect x="-75" y="-24" width="150" height="48" rx="8" fill="#191921" stroke="#ffffff" stroke-width="1.5" />
+              <text y="-3" text-anchor="middle" fill="#ffffff" font-size="11.5" font-weight="bold" font-family="JetBrains Mono">W: FIELD HOSP (FH)</text>
+              <text y="14" text-anchor="middle" fill="#a1a1aa" font-size="10" font-family="Inter">West</text>
+            </g>
+
+            <!-- C: Command HQ -->
+            <g transform="translate(330,185)">
+              <rect x="-75" y="-26" width="150" height="52" rx="8" fill="#ff6b00" />
+              <text y="-3" text-anchor="middle" fill="#0b0b0d" font-size="12.5" font-weight="900" font-family="JetBrains Mono">CENTER: COMMAND HQ</text>
+              <text y="14" text-anchor="middle" fill="#0b0b0d" font-size="10" font-weight="bold" font-family="Inter">River Bridge #1</text>
+            </g>
+
+            <!-- E: Radar Station -->
+            <g transform="translate(530,185)">
+              <rect x="-75" y="-24" width="150" height="48" rx="8" fill="#191921" stroke="#ffffff" stroke-width="1.5" />
+              <text y="-3" text-anchor="middle" fill="#ffffff" font-size="11.5" font-weight="bold" font-family="JetBrains Mono">E: RADAR STN (RS)</text>
+              <text y="14" text-anchor="middle" fill="#a1a1aa" font-size="10" font-family="Inter">East</text>
+            </g>
+
+            <!-- SW: Fuel Dump -->
+            <g transform="translate(130,295)">
+              <rect x="-68" y="-24" width="136" height="48" rx="8" fill="#191921" stroke="#ffffff" stroke-width="1.5" />
+              <text y="-3" text-anchor="middle" fill="#ff6b00" font-size="12" font-weight="bold" font-family="JetBrains Mono">SW: FUEL DUMP (FD)</text>
+              <text y="14" text-anchor="middle" fill="#a1a1aa" font-size="10" font-family="Inter">South-West</text>
+            </g>
+
+            <!-- S: Main Bridge -->
+            <g transform="translate(330,295)">
+              <rect x="-75" y="-24" width="150" height="48" rx="8" fill="#191921" stroke="#38bdf8" stroke-width="1.5" />
+              <text y="-3" text-anchor="middle" fill="#ffffff" font-size="11.5" font-weight="bold" font-family="JetBrains Mono">S: MAIN BRIDGE (MB)</text>
+              <text y="14" text-anchor="middle" fill="#38bdf8" font-size="10" font-family="Inter">River Bridge #2</text>
+            </g>
+
+            <!-- SE: Signal Post -->
+            <g transform="translate(530,295)">
+              <rect x="-72" y="-24" width="144" height="48" rx="8" fill="#191921" stroke="#ffffff" stroke-width="1.5" />
+              <text y="-3" text-anchor="middle" fill="#ff6b00" font-size="12" font-weight="bold" font-family="JetBrains Mono">SE: SIGNAL POST (SP)</text>
+              <text y="14" text-anchor="middle" fill="#a1a1aa" font-size="10" font-family="Inter">South-East</text>
+            </g>
+          </svg>
+        </div>
+      `;
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. WEB AUDIO API & SPEECH SYNTHESIZER (SECTION 2 AUDIOMETRY ENGINE)
+    // -------------------------------------------------------------------------
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, startTime, duration, pan = 0) {
+      initAudioContext();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.28, startTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      if (audioCtx.createStereoPanner) {
+        const panner = audioCtx.createStereoPanner();
+        panner.pan.setValueAtTime(pan, startTime);
+        osc.connect(gain);
+        gain.connect(panner);
+        panner.connect(audioCtx.destination);
+      } else {
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+      }
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.02);
+    }
+
+    function playStaticBurst(durationSec) {
+      initAudioContext();
+      const bufferSize = audioCtx.sampleRate * durationSec;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.04;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      noise.connect(audioCtx.destination);
+      noise.start();
+    }
+
+    function speakText(text, rate = 0.95, panNote = "") {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = rate;
+        utter.pitch = 1.0;
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    function testAudioCalibrate() {
+      initAudioContext();
+      const now = audioCtx.currentTime;
+      playTone(600, now, 0.25, -0.8);
+      playTone(900, now + 0.35, 0.25, 0.8);
+      speakText("Cadetians audio check. Left and right channels calibrated.");
+    }
+
+    function playCurrentAudioCue() {
+      initAudioContext();
+      const qObj = QUESTIONS[state.currentQIdx];
+      const statusEl = document.getElementById("audioStatusText");
+      const now = audioCtx.currentTime;
+
+      statusEl.textContent = "🔊 Transmitting audio cue...";
+
+      switch (qObj.q) {
+        case 9: {
+          // LOW (400Hz) – HIGH (1200Hz) – LOW (400Hz) – MID (800Hz) – HIGH (1200Hz)
+          const seq = [400, 1200, 400, 800, 1200];
+          seq.forEach((f, i) => playTone(f, now + i * 0.65, 0.45));
+          break;
+        }
+        case 10: {
+          // Reverse Digit Span: 7 - 2 - 9 - 4 - 8 - 1
+          speakText("7... 2... 9... 4... 8... 1", 0.85);
+          break;
+        }
+        case 11: {
+          // Radio Callsign over Static: Alpha-Seven-Niner-Sierra-Four-Delta
+          playStaticBurst(4.5);
+          speakText("Alpha... Seven... Niner... Sierra... Four... Delta", 0.9);
+          break;
+        }
+        case 12: {
+          // Pitch Comparison: Tone A = 650 Hz (1.2s), Pause (0.5s), Tone B = 685 Hz (1.2s)
+          playTone(650, now, 1.2);
+          playTone(685, now + 1.7, 1.2);
+          break;
+        }
+        case 13: {
+          // Dichotic Filter: Left Ear 3-8-5 vs Right Ear 9-1-6
+          playTone(500, now, 0.2, -1); // Left ear ping marker
+          speakText("Left ear channel: 3... 8... 5. Right ear channel: 9... 1... 6.", 0.95);
+          break;
+        }
+        case 14: {
+          // Morse Rhythm: C (dah-dit-dah-dit) followed by A (dit-dah)
+          let t = now;
+          // C: - . - .
+          playTone(750, t, 0.36); t += 0.48;
+          playTone(750, t, 0.12); t += 0.24;
+          playTone(750, t, 0.36); t += 0.48;
+          playTone(750, t, 0.12); t += 0.85;
+          // A: . -
+          playTone(750, t, 0.12); t += 0.24;
+          playTone(750, t, 0.36);
+          break;
+        }
+        case 15: {
+          // Minimal Pairs through White Noise: SHIP – SHEEP – SLIP – SLEEP
+          playStaticBurst(4.2);
+          speakText("Ship... Sheep... Slip... Sleep", 0.85);
+          break;
+        }
+        case 16: {
+          // Dual-Task Audio: BLUE – RED – GREEN – RED – RED – YELLOW – BLUE – RED
+          speakText("Blue... Red... Green... Red... Red... Yellow... Blue... Red", 0.95);
+          break;
+        }
+      }
+
+      setTimeout(() => {
+        if (statusEl) statusEl.textContent = "Transmission complete. Select your response below.";
+      }, 3500);
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. MODAL & FINAL SCORECARD DIAGNOSTICS
+    // -------------------------------------------------------------------------
+    function openConfirmModal() {
+      document.getElementById("customModal").classList.remove("hidden");
+    }
+
+    function closeCustomModal() {
+      document.getElementById("customModal").classList.add("hidden");
+    }
+
+    function confirmEndExam() {
+      closeCustomModal();
+      finishAssessment();
+    }
+
+    function finishAssessment() {
+      state.status = "result";
+      if (masterInterval) clearInterval(masterInterval);
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+
+      hideAllScreens();
+      document.getElementById("upperScaleBar").classList.add("hidden");
+      document.getElementById("endExamBtn").classList.add("hidden");
+      document.getElementById("resultScreen").classList.remove("hidden");
+
+      computeAndRenderReport();
+    }
+
+    function computeAndRenderReport() {
+      // 1. Part A: CSS Score (Q1-Q70)
+      let totalCssCorrect = 0;
+      const cssListEl = document.getElementById("cssBreakdownList");
+      cssListEl.innerHTML = "";
+
+      for (let s = 0; s < 7; s++) {
+        const sec = SECTIONS[s];
+        let secCorrect = 0;
+        const secTotal = sec.endQ - sec.startQ + 1;
+        for (let q = sec.startQ; q <= sec.endQ; q++) {
+          const idx = q - 1;
+          if (state.answers[idx] !== null && state.answers[idx] === QUESTIONS[idx].ans) {
+            secCorrect++;
+            totalCssCorrect++;
+          }
+        }
+        const pct = Math.round((secCorrect / secTotal) * 100);
+        cssListEl.innerHTML += `
+          <div class="p-3 rounded-xl bg-card border border-borderDark">
+            <div class="flex justify-between font-bold text-white mb-1.5">
+              <span>${sec.title}</span>
+              <span class="font-mono text-cadetOrange">${secCorrect}/${secTotal} (${pct}%)</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-obsidian overflow-hidden">
+              <div class="h-full bg-cadetOrange" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      const cssPct = Math.round((totalCssCorrect / 70) * 100);
+      document.getElementById("resCssScore").textContent = `${totalCssCorrect} / 70`;
+      document.getElementById("resCssPct").textContent = `${cssPct}% Cognitive Accuracy`;
+
+      // 2. Part B: OPAM Psychometric Audit (Q71-Q190)
+      let opamAnswered = 0;
+      let latencySum = 0;
+      let latencyCount = 0;
+
+      for (let i = 70; i < 190; i++) {
+        if (state.answers[i] !== null) opamAnswered++;
+        if (state.latenciesMs[i] !== null) {
+          latencySum += state.latenciesMs[i];
+          latencyCount++;
+        }
+      }
+
+      const avgLatSec = latencyCount > 0 ? (latencySum / latencyCount / 1000).toFixed(2) : "0.00";
+      document.getElementById("resOpamCount").textContent = `${opamAnswered} / 120`;
+      document.getElementById("resAvgLatency").textContent = `Avg Latency: ${avgLatSec}s`;
+
+      // Consistency Pairs Check (Opposite directions should sum ~4 on 0..4 scale, i.e., |a + b - 4| <= 1)
+      const pairs = [
+        [71, 91, "Initiative / Taking Charge"],
+        [76, 99, "Emotional Composure"],
+        [84, 105, "Moral Courage / Speaking Up"],
+        [81, 111, "Task Perseverance"],
+        [79, 119, "Accountability / Owning Errors"],
+        [89, 125, "Stress Tolerance Under Deadlines"]
+      ];
+
+      let consistentCount = 0;
+      pairs.forEach(([qA, qB, label]) => {
+        const a = state.answers[qA - 1];
+        const b = state.answers[qB - 1];
+        if (a !== null && b !== null && Math.abs((a + b) - 4) <= 1) {
+          consistentCount++;
+        }
+      });
+
+      document.getElementById("resConsistency").textContent = `${consistentCount} / 6`;
+
+      // Lie Scale Check (Q80, Q95, Q115 — Strongly Agree = 4 triggers faking alert)
+      const lieQs = [80, 95, 115];
+      let lieFlags = 0;
+      lieQs.forEach(q => {
+        if (state.answers[q - 1] === 4) lieFlags++;
+      });
+
+      // Honesty Check (Q74, Q87, Q108, Q128 — Agree/Strongly Agree >= 3 shows realistic self-awareness)
+      const honestyQs = [74, 87, 108, 128];
+      let honestyScore = 0;
+      honestyQs.forEach(q => {
+        if (state.answers[q - 1] !== null && state.answers[q - 1] >= 3) honestyScore++;
+      });
+
+      const opamAuditEl = document.getElementById("opamAuditList");
+      const latStatus =
+        latencyCount === 0
+          ? "No OPAM responses logged"
+          : parseFloat(avgLatSec) >= 1.4 && parseFloat(avgLatSec) <= 4.0
+          ? "OPTIMAL (1.5s–3.5s Instinctive Zone)"
+          : parseFloat(avgLatSec) < 1.4
+          ? "FAST / STRAIGHT-LINE RISK (<1.4s)"
+          : "HESITATION SPIKE (>4.0s Over-Calculation)";
+
+      opamAuditEl.innerHTML = `
+        <div class="p-3.5 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+          <div>
+            <div class="font-bold text-white">Consistency Pair Alignment</div>
+            <div class="text-zinc-400">6 reversed trait pairs across Sec 8</div>
+          </div>
+          <span class="font-mono font-bold ${consistentCount >= 4 ? "text-emerald-400" : "text-cadetOrange"}">
+            ${consistentCount}/6 Aligned
+          </span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+          <div>
+            <div class="font-bold text-white">Response Latency Telemetry</div>
+            <div class="text-zinc-400">${latStatus}</div>
+          </div>
+          <span class="font-mono font-bold text-white">${avgLatSec}s</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+          <div>
+            <div class="font-bold text-white">Social Desirability / Lie Scale</div>
+            <div class="text-zinc-400">Traps: Q80, Q95, Q115</div>
+          </div>
+          <span class="font-mono font-bold ${lieFlags === 0 ? "text-emerald-400" : "text-red-400"}">
+            ${lieFlags === 0 ? "CLEAN (0 Traps)" : `${lieFlags} Flagged`}
+          </span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-card border border-borderDark flex justify-between items-center">
+          <div>
+            <div class="font-bold text-white">Human Realism / Honesty Index</div>
+            <div class="text-zinc-400">Items: Q74, Q87, Q108, Q128</div>
+          </div>
+          <span class="font-mono font-bold text-cadetOrange">${honestyScore}/4 Authentic</span>
+        </div>
+      `;
+
+      // Overall Screening Verdict
+      const verdictEl = document.getElementById("resVerdict");
+      const verdictSub = document.getElementById("resVerdictSub");
+      if (totalCssCorrect >= 45 && consistentCount >= 4 && lieFlags <= 1) {
+        verdictEl.textContent = "RECOMMENDED (STAGE-1 PASS)";
+        verdictEl.className = "text-base sm:text-lg font-black text-emerald-400 mt-1.5";
+        verdictSub.textContent = "Strong cognitive speed + consistent OLQ profile";
+      } else if (totalCssCorrect >= 32) {
+        verdictEl.textContent = "BORDERLINE / TRAINABLE";
+        verdictEl.className = "text-base sm:text-lg font-black text-cadetOrange mt-1.5";
+        verdictSub.textContent = "Boost CSS pacing & OPAM trait consistency";
+      } else {
+        verdictEl.textContent = "SCREEN-OUT RISK";
+        verdictEl.className = "text-base sm:text-lg font-black text-red-400 mt-1.5";
+        verdictSub.textContent = "Requires timed cognitive & psychometric drills";
+      }
+
+      // Populate Part A Review Drawer
+      const reviewDrawer = document.getElementById("reviewDrawer");
+      reviewDrawer.innerHTML = "";
+      const letters = ["A", "B", "C", "D", "E"];
+      for (let i = 0; i < 70; i++) {
+        const q = QUESTIONS[i];
+        const userAns = state.answers[i];
+        const isCorrect = userAns === q.ans;
+        reviewDrawer.innerHTML += `
+          <div class="p-3 rounded-xl bg-card border ${isCorrect ? "border-emerald-500/30" : "border-borderDark"} text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span class="font-mono font-bold text-cadetOrange">Q${q.q}</span>
+              <span class="text-zinc-300 ml-1.5">${q.prompt.split("\n")[0]}</span>
+            </div>
+            <div class="shrink-0 font-mono flex items-center gap-3">
+              <span class="${userAns === null ? "text-zinc-500" : isCorrect ? "text-emerald-400" : "text-red-400"}">
+                Yours: ${userAns === null ? "—" : letters[userAns]}
+              </span>
+              <span class="text-white font-bold">
+                Key: ${letters[q.ans]} (${q.options[q.ans]})
+              </span>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function toggleReviewDrawer() {
+      const drawer = document.getElementById("reviewDrawer");
+      const btn = document.getElementById("toggleReviewBtn");
+      drawer.classList.toggle("hidden");
+      btn.textContent = drawer.classList.contains("hidden") ? "Show All 70 Answers" : "Hide Answer Key";
+    }
+  </script>
+</body>
+</html>
